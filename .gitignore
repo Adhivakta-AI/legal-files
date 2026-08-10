@@ -1,0 +1,16 @@
+# backend Python environment and caches
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+*.py[cod]
+
+# server-side secrets
+backend/.env
+
+# local model/cache artifacts
+.cache/
+.pytest_cache/
+
+# local Codex/agent plugin cache
+.agents/
+skills-lock.json

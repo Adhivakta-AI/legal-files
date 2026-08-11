@@ -1,0 +1,20 @@
+services:
+  ocr:
+    build:
+      context: .
+      args:
+        GIT_COMMIT: "${GIT_COMMIT:-unknown}"
+    image: "${OCR_IMAGE:-judgment-ocr:local}"
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    ports:
+      - "8000:8000"
+    volumes:
+      - "${BATCH_DIR:-./batch-data/default}:/batch"
+      - "${MODEL_CACHE_DIR:-./model-cache}:/models"
+    environment:
+      HOME: /tmp/home
+      PADDLE_PDX_CACHE_HOME: /models
+      PADDLE_PDX_MODEL_SOURCE: BOS
+      UV_CACHE_DIR: /tmp/uv-cache
+      GIT_COMMIT: "${GIT_COMMIT:-unknown}"
+      OCR_IMAGE_ID: "${OCR_IMAGE_ID:-unknown}"

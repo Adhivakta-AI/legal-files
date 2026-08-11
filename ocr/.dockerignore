@@ -1,0 +1,8 @@
+.git
+.venv
+work
+model-cache
+.env
+batch-data
+__pycache__
+*.pyc

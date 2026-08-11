@@ -1,0 +1,15 @@
+.venv/
+.uv-cache/
+.uv-python/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+
+# Generated OCR data and downloaded model weights.
+work/*
+!work/.gitkeep
+model-cache/*
+!model-cache/.gitkeep
+.env
+batch-data/

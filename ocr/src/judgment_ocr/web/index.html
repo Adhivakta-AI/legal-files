@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Judgment OCR Review</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark">SC</div>
+        <div>
+          <h1>Judgment OCR Review</h1>
+          <p id="task-meta">Loading gold set</p>
+        </div>
+      </div>
+      <div class="progress-block">
+        <div class="progress-copy">
+          <span id="progress-label">0 of 0 verified</span>
+          <span id="status-counts"></span>
+        </div>
+        <div class="progress-track"><div id="progress-bar"></div></div>
+      </div>
+      <nav class="page-nav" aria-label="Page navigation">
+        <button id="previous-task" class="icon-button" title="Previous page" aria-label="Previous page">←</button>
+        <span id="position-label">0 / 0</span>
+        <button id="next-task" class="icon-button" title="Next page" aria-label="Next page">→</button>
+      </nav>
+    </header>
+
+    <main class="workspace">
+      <aside class="task-rail">
+        <div class="rail-toolbar">
+          <label for="status-filter">Status</label>
+          <select id="status-filter">
+            <option value="all">All pages</option>
+            <option value="ready">Ready</option>
+            <option value="draft">Draft</option>
+            <option value="verified">Verified</option>
+            <option value="pending">OCR pending</option>
+          </select>
+        </div>
+        <div id="task-list" class="task-list"></div>
+      </aside>
+
+      <section class="document-pane" aria-label="Source PDF page">
+        <div class="pane-toolbar">
+          <div>
+            <strong id="document-label">PDF page</strong>
+            <span id="document-status" class="status-badge"></span>
+          </div>
+          <div class="zoom-controls">
+            <button id="zoom-out" class="icon-button" title="Zoom out" aria-label="Zoom out">−</button>
+            <span id="zoom-label">100%</span>
+            <button id="zoom-in" class="icon-button" title="Zoom in" aria-label="Zoom in">+</button>
+            <a id="pdf-link" class="command-link" target="_blank" rel="noreferrer">Open PDF</a>
+          </div>
+        </div>
+        <div id="page-stage" class="page-stage">
+          <img id="page-image" alt="Rendered judgment PDF page">
+        </div>
+      </section>
+
+      <section class="review-pane" aria-label="OCR comparison and correction">
+        <div class="candidate-header">
+          <div id="candidate-tabs" class="candidate-tabs" role="tablist"></div>
+          <button id="use-candidate" class="secondary-button">Use candidate</button>
+        </div>
+        <div class="candidate-metrics">
+          <span id="candidate-quality"></span>
+          <span id="candidate-confidence"></span>
+          <span id="candidate-runtime"></span>
+        </div>
+        <pre id="candidate-text" class="candidate-text"></pre>
+
+        <div class="ground-truth-header">
+          <label for="ground-truth">Corrected ground truth</label>
+          <div id="source-control" class="source-control"></div>
+        </div>
+        <textarea id="ground-truth" spellcheck="false"></textarea>
+
+        <fieldset class="verification-grid">
+          <legend>Verified against PDF</legend>
+          <label><input type="checkbox" data-check="party_names"> Party names</label>
+          <label><input type="checkbox" data-check="judge_names"> Judge names</label>
+          <label><input type="checkbox" data-check="citations"> Citations</label>
+          <label><input type="checkbox" data-check="section_numbers"> Section numbers</label>
+          <label><input type="checkbox" data-check="paragraph_order"> Paragraph order</label>
+        </fieldset>
+
+        <label class="notes-label" for="review-notes">Notes</label>
+        <textarea id="review-notes" class="notes" maxlength="4000"></textarea>
+
+        <footer class="review-actions">
+          <label class="verify-toggle"><input id="verified" type="checkbox"> Mark page verified</label>
+          <span id="save-state"></span>
+          <button id="save-review" class="primary-button">Save review</button>
+        </footer>
+      </section>
+    </main>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

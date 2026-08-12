@@ -1,0 +1,13 @@
+{
+  "batch": 2,
+  "documents": 7000,
+  "selected_by_era": {
+    "1950-1969": 792,
+    "1970-1989": 1047,
+    "1990-2009": 2833,
+    "2010-2019": 1578,
+    "2020-onward": 750
+  },
+  "pdf_validation_performed": false,
+  "pdf_validation_failures": null
+}

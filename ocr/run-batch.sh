@@ -57,7 +57,7 @@ export OCR_IMAGE_ID="$("${compose[@]}" images -q ocr | head -1)"
 
 echo "[preflight] Verifying the OCR container"
 "${compose[@]}" run --rm --entrypoint sh ocr -c \
-  'tesseract --version | head -1 && python --version && judgment-ocr --help >/dev/null'
+  'tesseract --version | head -1 && python --version && /app/.venv/bin/judgment-ocr --help >/dev/null'
 
 run_ocr() {
   "${compose[@]}" run --rm ocr "$@"

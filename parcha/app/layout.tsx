@@ -1,15 +1,22 @@
-import { Geist, Geist_Mono, Inter } from "next/font/google"
-
+import type { Metadata } from "next"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { cn } from "@/lib/utils";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'})
-
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
+export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+  ),
+  title: "Rig - Local-First AI Coding Assistant",
+  description:
+    "A complete AI coding agent that executes entirely on your machine. No API calls. No usage caps. No cloud dependency.",
+  icons: { icon: "/assets/brand/rig-icon.svg" },
+  openGraph: {
+    title: "Rig - Local-First AI Coding Assistant",
+    description:
+      "A complete AI coding agent that executes entirely on your machine. No API calls. No usage caps. No cloud dependency.",
+    type: "website",
+    images: [{ url: "/assets/brand/rig-graph.png", width: 1200, height: 630 }],
+  },
+}
 
 export default function RootLayout({
   children,
@@ -17,14 +24,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", inter.variable)}
-    >
-      <body>
-        <ThemeProvider>{children}</ThemeProvider>
-      </body>
+    <html lang="en">
+      <body>{children}</body>
     </html>
   )
 }

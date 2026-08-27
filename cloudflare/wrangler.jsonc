@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "parcha-search-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-23",
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "observability": { "enabled": true },
+  "ai": { "binding": "AI" },
+  "vectorize": [
+    { "binding": "VECTORIZE", "index_name": "parcha-judgment-chunks" }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "parcha-judgments",
+      "database_id": "de7ed05f-e25c-467a-9f80-106d0e0e5acf",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    { "binding": "DOCUMENTS", "bucket_name": "lex" }
+  ],
+  "vars": {
+    "BGE_MODEL": "@cf/baai/bge-small-en-v1.5",
+    "EMBEDDING_POOLING": "cls",
+    "SEMANTIC_CANDIDATES": "80",
+    "KEYWORD_CANDIDATES": "80",
+    "RRF_K": "60",
+    "CORS_ORIGIN": "*"
+  }
+}

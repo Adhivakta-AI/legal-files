@@ -1,0 +1,16 @@
+{
+  "name": "parcha-cloudflare-search",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "check": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "d1:migrate": "wrangler d1 migrations apply parcha-judgments --remote"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20260702.1",
+    "typescript": "5.9.2",
+    "wrangler": "4.31.0"
+  }
+}

@@ -1,12 +1,23 @@
 @import "tailwindcss";
 @import "./reference.css";
 
-@theme inline {
+@theme static {
   --font-sans: "Instrument Sans", system-ui, sans-serif;
   --font-display: "Chalet", Inter, sans-serif;
   --font-mono: "Chivo Mono", monospace;
   --font-pixel: "Geist Pixel Square", monospace;
-  --color-rig-red: oklch(0.6329 0.2075 31.49);
+  --color-accent-50: #f1f6fd;
+  --color-accent-100: #e0ebfa;
+  --color-accent-200: #c7ddf8;
+  --color-accent-300: #a0c8f6;
+  --color-accent-400: #6ba6ee;
+  --color-accent-500: #3980dd;
+  --color-accent-600: #2e62d1;
+  --color-accent-700: #234fbd;
+  --color-accent-800: #223f97;
+  --color-accent-900: #223875;
+  --color-accent-950: #172346;
+  --color-accent: var(--color-accent-500);
   --color-rig-ink: oklch(0.1448 0 0);
   --color-rig-paper: oklch(0.9465 0.0099 87.47);
   --color-rig-blue: oklch(0.5312 0.260273 266.7713);
@@ -16,7 +27,7 @@
 }
 
 :focus-visible {
-  outline: 2px solid var(--red);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -73,7 +84,6 @@ h6 {
   isolation: isolate;
 }
 
-.intro-shader-surface,
 .early-shader-surface {
   background:
     repeating-linear-gradient(
@@ -85,7 +95,12 @@ h6 {
   animation: shader-line-drift 3s linear infinite;
 }
 
-.how-shader-surface {
+.intro-strip-canvas {
+  display: block;
+  background: transparent;
+}
+
+.how-shader-canvas {
   background:
     repeating-linear-gradient(
       0deg,
@@ -93,6 +108,16 @@ h6 {
       transparent 1px 16px
     ),
     radial-gradient(ellipse at center, #181818 0%, #121212 65%, #0a0a0a 100%);
+  animation: how-shader-fallback-drift 8s linear infinite;
+  display: block;
+}
+
+@keyframes how-shader-fallback-drift {
+  to {
+    background-position:
+      0 32px,
+      0 0;
+  }
 }
 
 @keyframes shader-line-drift {
@@ -178,7 +203,7 @@ h6 {
 }
 
 .blocked-label {
-  fill: var(--red);
+  fill: var(--accent);
   font-size: 4px;
 }
 
@@ -211,15 +236,17 @@ h6 {
 
 .how-step-progress-fill {
   animation: none !important;
+  height: 100%;
   transform: scaleY(0);
   transform-origin: top;
+  will-change: transform;
 }
 
 .card-content-display[data-card-step="1"] {
   min-height: 322.34375px;
 }
 
-.how-shader-surface {
+.how-shader-canvas {
   z-index: 0;
 }
 
@@ -306,7 +333,7 @@ h6 {
 
 .cta-logo,
 .cta-logo-glow {
-  color: var(--red);
+  color: var(--accent);
 }
 
 .cta-oversized-svg,

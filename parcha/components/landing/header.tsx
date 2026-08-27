@@ -67,13 +67,18 @@ export function Header() {
             </Link>
           </li>
           <li>
-            <a
-              href="#early-access"
+            <Link href="/research" onClick={() => setOpen(false)}>
+              Research
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/research"
               className="btn-chamfer site-nav-cta btn-dark"
               onClick={() => setOpen(false)}
             >
-              Get Early Access
-            </a>
+              Open Lex
+            </Link>
           </li>
         </ul>
       </nav>

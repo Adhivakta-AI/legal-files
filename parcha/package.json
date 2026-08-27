@@ -5,8 +5,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:local": "node --env-file=../backend/.env node_modules/next/dist/bin/next dev",
     "build": "next build",
     "start": "next start",
+    "start:local": "node --env-file=../backend/.env node_modules/next/dist/bin/next start",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit"

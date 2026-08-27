@@ -27,7 +27,7 @@ export function Hero() {
           calls. No usage caps.
         </p>
         <div className="hero-actions" data-hero-reveal>
-          <a href="#early-access" className="btn-chamfer btn-red">
+          <a href="#early-access" className="btn-chamfer btn-primary">
             Join Waitlist
           </a>
           <a href="#our-approach" className="btn-chamfer hero-outline-button">

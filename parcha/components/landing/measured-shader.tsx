@@ -1,17 +1,20 @@
 "use client"
 
 import { useLayoutEffect, useRef } from "react"
+import { StripShader } from "./strip-shader"
 
 export function MeasuredShader({
   wrapClassName,
   surfaceClassName,
   targetSelector,
   extraPad,
+  canvasId,
 }: {
   wrapClassName: string
-  surfaceClassName: string
+  surfaceClassName?: string
   targetSelector: string
   extraPad: number
+  canvasId?: string
 }) {
   const wrapper = useRef<HTMLDivElement>(null)
 
@@ -47,7 +50,11 @@ export function MeasuredShader({
 
   return (
     <div ref={wrapper} className={wrapClassName} aria-hidden="true">
-      <div className={`shader-bg ${surfaceClassName}`} />
+      {canvasId ? (
+        <StripShader id={canvasId} />
+      ) : (
+        <div className={`shader-bg ${surfaceClassName ?? ""}`} />
+      )}
     </div>
   )
 }

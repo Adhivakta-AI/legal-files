@@ -8,7 +8,7 @@ export function FinalCta() {
       <div className="cta-vortex-wrap" aria-hidden="true">
         <Image
           className="cta-vortex-img"
-          src="/assets/cta/cta-vortex.webp"
+          src="/assets/cta/cta-vortex.png"
           alt=""
           width={2106}
           height={1307}

@@ -148,12 +148,12 @@ function LocalFlowDiagram() {
         </text>
         <path
           d="M273 37v41"
-          stroke="var(--red)"
+          stroke="var(--accent)"
           strokeWidth=".5"
           strokeDasharray="3 5"
           opacity=".4"
         />
-        <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--red)">
+        <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--accent)">
           <animateMotion dur="1.5s" repeatCount="indefinite">
             <mpath href="#path-cloud-rig" />
           </animateMotion>
@@ -167,19 +167,19 @@ function LocalFlowDiagram() {
         </rect>
         <path
           d="M267 51l12 12M279 51l-12 12"
-          stroke="var(--red)"
+          stroke="var(--accent)"
           strokeWidth="1.5"
         />
       </g>
       <g className="diagram-blocked">
         <path
           d="M273 172v43"
-          stroke="var(--red)"
+          stroke="var(--accent)"
           strokeWidth=".5"
           strokeDasharray="3 5"
           opacity=".4"
         />
-        <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--red)">
+        <rect x="-1.5" y="-1.5" width="3" height="3" fill="var(--accent)">
           <animateMotion dur="1.5s" begin=".75s" repeatCount="indefinite">
             <mpath href="#path-rig-telemetry" />
           </animateMotion>
@@ -194,7 +194,7 @@ function LocalFlowDiagram() {
         </rect>
         <path
           d="M267 187l12 12M279 187l-12 12"
-          stroke="var(--red)"
+          stroke="var(--accent)"
           strokeWidth="1.5"
         />
         <rect
@@ -257,10 +257,10 @@ function OfflineGlobe() {
         <text x="150" y="-35" textAnchor="middle" className="globe-label">
           CLOUD SERVERS
         </text>
-        <path d="M150-17v62" stroke="var(--red)" strokeDasharray="4 5" />
+        <path d="M150-17v62" stroke="var(--accent)" strokeDasharray="4 5" />
         <path
           d="m140 18 20 20m0-20-20 20"
-          stroke="var(--red)"
+          stroke="var(--accent)"
           strokeWidth="2"
         />
         <text x="172" y="31" className="blocked-label">
@@ -280,10 +280,10 @@ function OfflineGlobe() {
         <text x="150" y="127" textAnchor="middle" className="globe-active">
           ✓ RIG MODEL ACTIVE
         </text>
-        <path d="M150 155v55" stroke="var(--red)" strokeDasharray="4 5" />
+        <path d="M150 155v55" stroke="var(--accent)" strokeDasharray="4 5" />
         <path
           d="m140 177 20 20m0-20-20 20"
-          stroke="var(--red)"
+          stroke="var(--accent)"
           strokeWidth="2"
         />
         <text x="172" y="190" className="blocked-label">
@@ -336,9 +336,9 @@ export function LocalSections() {
       >
         <MeasuredShader
           wrapClassName="intro-shader-wrap"
-          surfaceClassName="intro-shader-surface"
           targetSelector=".intro-headline-wrap"
           extraPad={50}
+          canvasId="shader3"
         />
         <div className="intro-container container">
           <div className="intro-flex">

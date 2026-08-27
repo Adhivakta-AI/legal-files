@@ -139,7 +139,7 @@ function SurveillanceEye() {
         cx="240"
         cy="240"
         r="14"
-        fill="#ED462D"
+        fill="var(--accent)"
       />
     </svg>
   )

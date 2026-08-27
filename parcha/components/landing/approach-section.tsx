@@ -4,6 +4,7 @@ import { useRef, useState } from "react"
 import { useGSAP } from "@gsap/react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { ApproachShader } from "./approach-shader"
 import { Badge } from "./primitives"
 
 gsap.registerPlugin(ScrollTrigger)
@@ -128,48 +129,109 @@ const steps = [
 
 export function ApproachSection() {
   const sectionRef = useRef<HTMLElement>(null)
+  const timerRef = useRef<gsap.core.Tween | null>(null)
+  const sectionVisibleRef = useRef(false)
+  const interactionPausedRef = useRef(false)
+  const reducedMotionRef = useRef(false)
   const [active, setActive] = useState(0)
-  const [paused, setPaused] = useState(true)
+
+  const syncTimerPlayback = () => {
+    const timer = timerRef.current
+    if (!timer) return
+
+    if (sectionVisibleRef.current && !interactionPausedRef.current) timer.play()
+    else timer.pause()
+  }
 
   useGSAP(
     () => {
-      const fill = sectionRef.current?.querySelectorAll<HTMLElement>(
+      const fills = sectionRef.current?.querySelectorAll<HTMLElement>(
         ".how-step-progress-fill"
-      )[active]
+      )
+      const fill = fills?.[active]
       if (!fill) return
-      gsap.set(".how-step-progress-fill", { scaleY: 0 })
+
+      reducedMotionRef.current = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches
+
+      gsap.set(fills, { scaleY: 0 })
+
+      if (reducedMotionRef.current) {
+        gsap.set(fill, { scaleY: 1 })
+        return
+      }
+
       const tween = gsap.to(fill, {
         scaleY: 1,
         transformOrigin: "top",
         duration: 6,
         ease: "none",
-        paused,
+        paused: true,
         onComplete: () => setActive((value) => (value + 1) % steps.length),
       })
-      gsap.fromTo(
+      timerRef.current = tween
+      syncTimerPlayback()
+
+      const cardTween = gsap.fromTo(
         ".card-content-display",
         { autoAlpha: 0, y: 8 },
         { autoAlpha: 1, y: 0, duration: 0.38, ease: "power2.out" }
       )
-      return () => tween.kill()
+
+      return () => {
+        if (timerRef.current === tween) timerRef.current = null
+        tween.kill()
+        cardTween.kill()
+      }
     },
-    { scope: sectionRef, dependencies: [active, paused], revertOnUpdate: true }
+    { scope: sectionRef, dependencies: [active], revertOnUpdate: true }
   )
 
   useGSAP(
     () => {
-      ScrollTrigger.create({
+      if (reducedMotionRef.current) return
+
+      const trigger = ScrollTrigger.create({
         trigger: sectionRef.current,
         start: "top 90%",
         end: "bottom 10%",
-        onEnter: () => setPaused(false),
-        onEnterBack: () => setPaused(false),
-        onLeave: () => setPaused(true),
-        onLeaveBack: () => setPaused(true),
+        onToggle: ({ isActive }) => {
+          sectionVisibleRef.current = isActive
+          syncTimerPlayback()
+        },
       })
+
+      sectionVisibleRef.current = trigger.isActive
+      syncTimerPlayback()
+
+      return () => {
+        sectionVisibleRef.current = false
+        trigger.kill()
+      }
     },
     { scope: sectionRef }
   )
+
+  const pauseTimer = () => {
+    interactionPausedRef.current = true
+    syncTimerPlayback()
+  }
+
+  const resumeTimer = () => {
+    interactionPausedRef.current = false
+    syncTimerPlayback()
+  }
+
+  const selectStep = (index: number) => {
+    if (index !== active) {
+      setActive(index)
+      return
+    }
+
+    timerRef.current?.restart()
+    syncTimerPlayback()
+  }
 
   return (
     <section
@@ -193,8 +255,8 @@ export function ApproachSection() {
         </div>
         <div
           className="how-stepper"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
+          onMouseEnter={pauseTimer}
+          onMouseLeave={resumeTimer}
         >
           <div className="how-steps-left">
             {steps.map((step, index) => (
@@ -202,7 +264,9 @@ export function ApproachSection() {
                 className={`how-step ${active === index ? "active" : ""}`}
                 type="button"
                 key={step.title}
-                onClick={() => setActive(index)}
+                data-step={index + 1}
+                aria-current={active === index ? "step" : undefined}
+                onClick={() => selectStep(index)}
               >
                 <span className="how-step-progress">
                   <span className="how-step-progress-fill" />
@@ -222,7 +286,7 @@ export function ApproachSection() {
             ))}
           </div>
           <div className="how-illustration">
-            <div className="shader-bg how-shader-surface" />
+            <ApproachShader />
             <div className="shader-overlay-card">
               <span className="card-title">{steps[active].cardTitle}</span>
               <div className="card-content-display" data-card-step={active + 1}>

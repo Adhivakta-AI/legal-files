@@ -298,8 +298,10 @@
 }
 
 .intro {
-  max-width: 780px;
-  margin-bottom: 2.25rem;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto 1.5rem;
+  text-align: center;
 }
 
 .eyebrow {
@@ -307,20 +309,24 @@
   color: var(--accent-light);
 }
 
+.intro .eyebrow {
+  margin-bottom: 0.75rem;
+}
+
 .intro h1 {
-  max-width: 800px;
-  margin: 1rem 0 1.25rem;
+  margin: 0;
   font-family: "Chalet", sans-serif;
-  font-size: clamp(3rem, 6vw, 5.75rem);
-  line-height: 0.9;
-  letter-spacing: -0.04em;
+  font-size: clamp(1.55rem, 2.5vw, 2rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .intro p {
-  max-width: 650px;
+  margin: 0.65rem auto 0;
   color: var(--paper-60);
-  font-size: clamp(0.98rem, 1.6vw, 1.13rem);
-  line-height: 1.6;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .composer {
@@ -818,6 +824,12 @@
   overflow-y: auto;
   background: rgba(5, 5, 5, 0.88);
   border-left: 1px solid var(--line);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.pipelinePanel::-webkit-scrollbar {
+  display: none;
 }
 
 .pipelineHeader {
@@ -1167,14 +1179,6 @@
   border-color: var(--accent);
 }
 
-.zoomValue {
-  width: 42px;
-  color: var(--paper-35);
-  font-family: "Chivo Mono", monospace;
-  font-size: 0.58rem;
-  text-align: center;
-}
-
 .pdfViewport {
   min-height: 0;
   flex: 1;
@@ -1350,10 +1354,6 @@
   .composerSection[data-compact="true"] {
     min-height: auto;
     padding: 1rem;
-  }
-
-  .intro h1 {
-    font-size: clamp(3rem, 15vw, 4.5rem);
   }
 
   .composer textarea {

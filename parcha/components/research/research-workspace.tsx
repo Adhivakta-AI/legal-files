@@ -316,10 +316,6 @@ export function ResearchWorkspace() {
       setStreamedAnswer((current) => current + event.delta)
       return
     }
-    if (event.type === "answer_reset") {
-      setStreamedAnswer("")
-      return
-    }
     if (event.type === "result") {
       setResult(event.result)
       setStreamedAnswer(event.result.answer)
@@ -499,9 +495,9 @@ export function ResearchWorkspace() {
             {!hasSubmitted ? (
               <div className={styles.intro}>
                 <span className={styles.eyebrow}>LEX / RESEARCH TERMINAL</span>
-                <h1>Ask the archive.<br />Trace every proposition.</h1>
+                <h1>What would you like to research?</h1>
                 <p>
-                  Search Indian Supreme Court judgments with acronym-aware retrieval and source-locked answers.
+                  Ask about an issue, doctrine, statute, or judgment.
                 </p>
               </div>
             ) : null}

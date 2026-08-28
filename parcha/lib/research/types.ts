@@ -102,7 +102,6 @@ export type ResearchStreamEvent =
       chunks: SearchChunk[]
     }
   | { type: "answer_delta"; delta: string }
-  | { type: "answer_reset"; reason: string }
   | { type: "result"; result: ResearchResult }
   | { type: "error"; stage?: PipelineStage; message: string; retryable: boolean }
 

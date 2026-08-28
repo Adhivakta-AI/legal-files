@@ -167,9 +167,7 @@ export async function POST(request: Request): Promise<Response> {
             analysis,
             chunks,
             signal: pipelineAbort.signal,
-            onDelta: (delta) => emit({ type: "answer_delta", delta }),
             onRetry: (reason) => {
-              emit({ type: "answer_reset", reason })
               stage("generation", "running", "Grounding check failed; regenerating safely", reason)
             },
           })

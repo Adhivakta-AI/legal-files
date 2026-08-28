@@ -125,51 +125,6 @@ function buildPrompt({
   }`
 }
 
-function extractPartialStringField(json: string, field: string): string {
-  const keyIndex = json.indexOf(`"${field}"`)
-  if (keyIndex < 0) return ""
-  const colon = json.indexOf(":", keyIndex + field.length + 2)
-  if (colon < 0) return ""
-  let index = colon + 1
-  while (/\s/.test(json[index] ?? "")) index += 1
-  if (json[index] !== '"') return ""
-  index += 1
-
-  let output = ""
-  while (index < json.length) {
-    const character = json[index]
-    if (character === '"') return output
-    if (character !== "\\") {
-      output += character
-      index += 1
-      continue
-    }
-
-    const escaped = json[index + 1]
-    if (!escaped) break
-    const escapes: Record<string, string> = {
-      '"': '"',
-      "\\": "\\",
-      "/": "/",
-      b: "\b",
-      f: "\f",
-      n: "\n",
-      r: "\r",
-      t: "\t",
-    }
-    if (escaped === "u") {
-      const code = json.slice(index + 2, index + 6)
-      if (code.length < 4 || !/^[0-9a-f]{4}$/i.test(code)) break
-      output += String.fromCharCode(Number.parseInt(code, 16))
-      index += 6
-      continue
-    }
-    output += escapes[escaped] ?? escaped
-    index += 2
-  }
-  return output
-}
-
 function inlineIds(answer: string): string[] {
   return [...answer.matchAll(/\[\[([^\]]+)\]\]/g)].map((match) => match[1])
 }
@@ -258,7 +213,6 @@ async function generateAttempt({
   chunks,
   correction,
   signal,
-  onDelta,
 }: {
   query: string
   mode: ResearchMode
@@ -266,10 +220,8 @@ async function generateAttempt({
   chunks: SearchChunk[]
   correction?: string
   signal?: AbortSignal
-  onDelta: (delta: string) => void
 }): Promise<ResearchAnswer> {
   let json = ""
-  let streamedAnswer = ""
 
   for await (const fragment of streamJson({
     systemInstruction: GENERATION_SYSTEM_PROMPT,
@@ -278,14 +230,38 @@ async function generateAttempt({
     signal,
   })) {
     json += fragment
-    const partialAnswer = extractPartialStringField(json, "answer")
-    if (partialAnswer.length > streamedAnswer.length) {
-      onDelta(partialAnswer.slice(streamedAnswer.length))
-      streamedAnswer = partialAnswer
-    }
   }
 
   return groundAnswer(JSON.parse(json) as UntrustedAnswer, chunks)
+}
+
+function citationSafeFallback(chunks: SearchChunk[]): ResearchAnswer {
+  const sources = [...new Map(chunks.map((chunk) => [chunk.judgment_id, chunk])).values()].slice(0, 5)
+  const answer = [
+    "The generated synthesis did not pass the archive's citation check. The retrieved authorities below are provided for direct review without inferring any additional holding.",
+    sources
+      .map(
+      (source) =>
+        `- **${source.title}**${source.citation ? ` (${source.citation})` : ""} — Review the retrieved passage and linked judgment PDF for its application to this query. [[${source.judgment_id}]]`
+      )
+      .join("\n"),
+  ].join("\n\n")
+
+  return {
+    answer,
+    citations: sources.map((source) => ({
+      judgment_id: source.judgment_id,
+      case_name: source.title,
+      citation: source.citation ?? "Unreported",
+      court: "Supreme Court of India",
+      ...(source.paragraph_number ? { paragraph_number: source.paragraph_number } : {}),
+      pdf_url: source.pdf_url,
+      pdf_page: source.pdf_page,
+      relevance_note: "Retrieved authority requiring direct review after synthesis validation failed.",
+    })),
+    statutes_referenced: [],
+    confidence: "low",
+  }
 }
 
 export async function generateGroundedAnswer({
@@ -294,7 +270,6 @@ export async function generateGroundedAnswer({
   analysis,
   chunks,
   signal,
-  onDelta,
   onRetry,
 }: {
   query: string
@@ -302,25 +277,23 @@ export async function generateGroundedAnswer({
   analysis: QueryAnalysis
   chunks: SearchChunk[]
   signal?: AbortSignal
-  onDelta: (delta: string) => void
   onRetry: (reason: string) => void
 }): Promise<ResearchAnswer> {
-  try {
-    return await generateAttempt({ query, mode, analysis, chunks, signal, onDelta })
-  } catch (error) {
-    if (error instanceof GeminiRequestError || (error instanceof DOMException && error.name === "AbortError")) {
-      throw error
+  let correction: string | undefined
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await generateAttempt({ query, mode, analysis, chunks, correction, signal })
+    } catch (error) {
+      if (error instanceof GeminiRequestError || (error instanceof DOMException && error.name === "AbortError")) {
+        throw error
+      }
+      const reason = error instanceof Error ? error.message : "Grounding validation failed"
+      if (attempt === 2) return citationSafeFallback(chunks)
+      onRetry(reason)
+      correction = `${reason} Start a new draft. Before returning JSON, inspect every paragraph and every bullet of 90 or more characters and place at least one allowed [[judgment_id]] marker inside that same block. Do not leave introductory summaries or conclusions uncited when they contain a legal proposition.`
     }
-    const reason = error instanceof Error ? error.message : "Grounding validation failed"
-    onRetry(reason)
-    return generateAttempt({
-      query,
-      mode,
-      analysis,
-      chunks,
-      correction: `${reason} Regenerate from scratch. Cite every substantive paragraph and use only allowed judgment IDs.`,
-      signal,
-      onDelta,
-    })
   }
+
+  return citationSafeFallback(chunks)
 }

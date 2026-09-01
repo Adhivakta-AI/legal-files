@@ -2,13 +2,13 @@ import { Header } from "./header"
 import { RigMark } from "./primitives"
 
 const ticker = [
-  "Zero telemetry",
-  "Native inference",
-  "100% offline",
-  "Your hardware, your rules",
-  "No tokens, no limits",
-  "Specialized SLM",
-  "Unbounded context",
+  "Supreme Court & High Courts",
+  "Intent-based retrieval",
+  "Verifiable citations",
+  "Zero bloat",
+  "No search operators",
+  "Tribunals & special benches",
+  "Built for litigators",
 ]
 
 export function Hero() {
@@ -18,13 +18,14 @@ export function Hero() {
       <RigMark className="hero-watermark" />
       <div className="hero-content">
         <h1 data-hero-reveal style={{ marginTop: "2rem" }}>
-          On-device AI coding.
+          The Ultimate Legal
           <br />
-          No cloud. No limits.
+          Precedent Engine.
         </h1>
         <p className="hero-sub" data-hero-reveal>
-          A complete coding agent that executes entirely on your machine. No API
-          calls. No usage caps.
+          The entire history of Indian jurisprudence, executing at the speed of
+          thought. No manual indexing. No slow loading times. Uncompromised
+          authority.
         </p>
         <div className="hero-actions" data-hero-reveal>
           <a href="#early-access" className="btn-chamfer btn-primary">

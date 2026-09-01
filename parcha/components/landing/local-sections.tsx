@@ -7,7 +7,7 @@ function LocalFlowDiagram() {
       className="intro-diagram"
       viewBox="0 0 560 280"
       fill="none"
-      aria-label="All Rig inference stays on your machine"
+      aria-label="A plain question resolved into cited authority"
     >
       <defs>
         <linearGradient id="local-trail" x1="0" y1="0" x2="1" y2="0">
@@ -30,7 +30,7 @@ function LocalFlowDiagram() {
       />
       <rect x="15" y="61" width="96" height="14" fill="var(--ink)" />
       <text x="20" y="71" className="diagram-label">
-        YOUR MACHINE
+        THE LEX ENGINE
       </text>
 
       <g className="svg-card">
@@ -43,10 +43,10 @@ function LocalFlowDiagram() {
           stroke="rgba(240,237,230,.15)"
         />
         <text x="75" y="121" textAnchor="middle" className="card-title">
-          YOUR CODE
+          YOUR QUESTION
         </text>
         <text x="75" y="133" textAnchor="middle" className="card-sub">
-          KEYSTROKES · FILES
+          PLAIN ENGLISH
         </text>
       </g>
 
@@ -100,20 +100,20 @@ function LocalFlowDiagram() {
           textAnchor="middle"
           className="rig-diagram-title"
         >
-          RIG
+          LEX
         </text>
         <text x="273" y="124" textAnchor="middle" className="card-accent">
-          ✓ LOCAL INFERENCE
+          ✓ INTENT UNDERSTOOD
         </text>
         <line x1="210" y1="145" x2="336" y2="145" className="card-divider" />
         <text x="238" y="160" textAnchor="middle" className="card-sub">
-          GPU
+          RATIO
         </text>
         <text x="273" y="160" textAnchor="middle" className="card-sub">
           INDEX
         </text>
         <text x="308" y="160" textAnchor="middle" className="card-sub">
-          MODEL
+          CITES
         </text>
       </g>
 
@@ -127,10 +127,10 @@ function LocalFlowDiagram() {
           stroke="rgba(240,237,230,.15)"
         />
         <text x="483" y="121" textAnchor="middle" className="card-title">
-          RESPONSE
+          AUTHORITY
         </text>
         <text x="483" y="133" textAnchor="middle" className="card-accent">
-          &lt;300ms · ON DEVICE
+          RANKED · CITED
         </text>
       </g>
 
@@ -144,7 +144,7 @@ function LocalFlowDiagram() {
           stroke="rgba(240,237,230,.12)"
         />
         <text x="273" y="21" textAnchor="middle" className="card-title">
-          CLOUD
+          BOOLEAN SYNTAX
         </text>
         <path
           d="M273 37v41"
@@ -206,7 +206,7 @@ function LocalFlowDiagram() {
           stroke="rgba(240,237,230,.12)"
         />
         <text x="273" y="231" textAnchor="middle" className="card-title">
-          TELEMETRY
+          KEYWORD GUESSWORK
         </text>
       </g>
     </svg>
@@ -255,7 +255,7 @@ function OfflineGlobe() {
           stroke="rgba(240,237,230,.12)"
         />
         <text x="150" y="-35" textAnchor="middle" className="globe-label">
-          CLOUD SERVERS
+          THIRD PARTIES
         </text>
         <path d="M150-17v62" stroke="var(--accent)" strokeDasharray="4 5" />
         <path
@@ -275,10 +275,10 @@ function OfflineGlobe() {
           stroke="rgba(240,237,230,.2)"
         />
         <text x="150" y="105" textAnchor="middle" className="globe-title">
-          YOUR MACHINE
+          YOUR MATTER
         </text>
         <text x="150" y="127" textAnchor="middle" className="globe-active">
-          ✓ RIG MODEL ACTIVE
+          ✓ PRIVILEGED
         </text>
         <path d="M150 155v55" stroke="var(--accent)" strokeDasharray="4 5" />
         <path
@@ -307,21 +307,21 @@ function OfflineGlobe() {
 
 const benefits = [
   [
-    "Unlimited",
-    "Remove the meter",
-    "Refactor the whole codebase. Riff on an idea all day. Run agent loops without thinking about cost.",
+    "Intent-Based AI",
+    "Search with context, not just keywords",
+    "Instead of matching words, our engine understands the ratio decidendi you are looking for.",
     "unlimited",
   ],
   [
-    "Privacy",
-    "Sever the connection",
-    "Your code, keystrokes, and files never leave your machine. Not anonymized. Not aggregated. Not sent.",
+    "Zero Bloat",
+    "Instant loading. No clutter.",
+    "We stripped away the heavy, outdated interfaces. Get straight to the judgment in milliseconds.",
     "privacy",
   ],
   [
-    "Latency",
-    "Stop waiting",
-    "No round-trip to a data center. Inference happens on your machine, in single-digit milliseconds.",
+    "Absolute Authority",
+    "Verifiable citations",
+    "Every ruling is hyperlinked, cross-referenced, and ready to be filed in court.",
     "latency",
   ],
 ] as const
@@ -344,16 +344,17 @@ export function LocalSections() {
           <div className="intro-flex">
             <div className="intro-headline-wrap" data-reveal>
               <Badge className="intro-badge" icon="introducing">
-                Introducing Rig
+                Introducing Lex
               </Badge>
               <h2 className="display intro-title">
-                Everything local.
+                The AI
                 <br />
-                Own your AI.
+                Smart Search.
               </h2>
               <p className="intro-desc">
-                A complete AI coding agent running entirely on your own
-                hardware. No usage limits. No cloud dependency.
+                Ask the question the way you would ask a colleague. Lex reads
+                the intent behind it and returns the authority that answers it —
+                ranked, cross-referenced, and ready to cite.
               </p>
             </div>
             <div className="intro-spacer" />
@@ -376,11 +377,12 @@ export function LocalSections() {
             </div>
             <div className="offline-content" data-reveal>
               <Badge className="offline-badge" icon="offline">
-                Offline
+                Confidential
               </Badge>
-              <h2>Work offline</h2>
+              <h2>Privileged by default</h2>
               <p>
-                Flights. Spotty Wi-Fi. Network outages. Nothing stops your flow.
+                Your queries describe your matter. They are never sold, shared,
+                or used to train anyone else&apos;s model.
               </p>
             </div>
           </div>

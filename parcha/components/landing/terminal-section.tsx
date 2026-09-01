@@ -9,25 +9,25 @@ import { Badge } from "./primitives"
 gsap.registerPlugin(ScrollTrigger)
 
 const prompts = [
-  "refactor auth to use JWT",
-  "write tests for the API layer",
-  "find the memory leak in worker",
-  "explain this regex to me",
-  "add dark mode to settings page",
-  "optimize the database queries",
+  "when is a dying declaration admissible",
+  "anticipatory bail after chargesheet is filed",
+  "test for arbitrariness under Article 14",
+  "condonation of delay in government appeals",
+  "writ against a private body on public duty",
+  "limitation period under section 138 NI Act",
 ]
 
 const annotations = [
-  ["Custom Model", "Optimized for consumer hardware"],
-  ["Inference", "Cross-OS using Rust"],
-  ["Context Graph", "Repo-wide code understanding"],
-  ["Terminal UI", "Built in Rust and blazing fast"],
-  ["Heavily Tuned", "Consistent tool calls and plan use"],
-  ["Opinionated", "Focused on code correctness"],
+  ["Ratio Engine", "Reads the proposition, not the words"],
+  ["Citation Graph", "Every judgment, cross-referenced"],
+  ["Full Corpus", "Supreme Court, High Courts, tribunals"],
+  ["Instant Retrieval", "Judgment on screen in milliseconds"],
+  ["Pinpoint Results", "Opens on the paragraph that matters"],
+  ["Court-Ready", "Citations formatted for filing"],
 ]
 
 function useTypewriter(active: boolean) {
-  const [text, setText] = useState("explain this regex to ")
+  const [text, setText] = useState("test for arbitrariness under ")
 
   useEffect(() => {
     if (!active) return
@@ -123,7 +123,7 @@ export function TerminalSection() {
           <Badge className="term-badge" icon="engineered">
             Engineered intelligence
           </Badge>
-          <h2 className="section-title term-title">Built for control freaks</h2>
+          <h2 className="section-title term-title">Built to be cited</h2>
         </div>
         <div className="terminal-artifact">
           <div className="terminal-blueprint-left" aria-hidden="true">
@@ -174,41 +174,39 @@ export function TerminalSection() {
                     <span />
                     <span />
                   </div>
-                  <span className="terminal-title">
-                    rig://localhost · offline
-                  </span>
+                  <span className="terminal-title">lex://research · live</span>
                   <span className="blink-dot blink-dot-sm" />
                 </div>
                 <div className="terminal-body">
                   <div data-terminal-line>
                     <span className="prompt">λ</span>{" "}
-                    <span className="cmd">rig init</span>
+                    <span className="cmd">lex init</span>
                   </div>
                   <div className="term-line-gap-sm" data-terminal-line>
-                    <pre className="term-ascii">{`  ██████╗  ██╗  ██████╗
-  ██╔══██╗ ██║ ██╔════╝
-  ██████╔╝ ██║ ██║ ███╗
-  ██╔══██╗ ██║ ██║  ██║
-  ██║  ██║ ██║ ╚██████║
-  ╚═╝  ╚═╝ ╚═╝  ╚═════╝`}</pre>
+                    <pre className="term-ascii">{`  ██╗      ███████╗ ██╗  ██╗
+  ██║      ██╔════╝ ╚██╗██╔╝
+  ██║      █████╗    ╚███╔╝
+  ██║      ██╔══╝    ██╔██╗
+  ███████╗ ███████╗ ██╔╝ ██╗
+  ╚══════╝ ╚══════╝ ╚═╝  ╚═╝`}</pre>
                   </div>
                   <div className="term-line-gap-sm output" data-terminal-line>
-                    &gt; Scanning hardware...
+                    &gt; Connecting to corpus...
                   </div>
                   <div className="output" data-terminal-line>
-                    &gt; Found M4 · 16GB RAM
+                    &gt; Supreme Court · High Courts · Tribunals
                   </div>
                   <div className="output" data-terminal-line>
-                    &gt; Loading RIG Model <span className="success">OK</span>
+                    &gt; Loading LEX engine <span className="success">OK</span>
                   </div>
                   <div className="output" data-terminal-line>
-                    &gt; Indexing 2,418 files · 87,102 symbols
+                    &gt; Citation graph resolved · ratios mapped
                   </div>
                   <div className="term-line-gap success" data-terminal-line>
                     ✓ Ready.{" "}
                     <span className="info">
-                      Network: <span className="term-off">OFF</span> ·
-                      Telemetry: <span className="term-off">OFF</span>
+                      Operators: <span className="term-off">NONE</span> ·
+                      Clutter: <span className="term-off">NONE</span>
                     </span>
                   </div>
                   <div className="term-line-gap" data-terminal-line>
@@ -220,10 +218,10 @@ export function TerminalSection() {
               </div>
             </div>
             <div className="monitor-bezel-bottom">
-              <span>Neural Engine</span>
+              <span>Ratio Engine</span>
               <span className="monitor-led" />
-              <span className="model-tag">RG-800</span>
-              <span>Local Ops</span>
+              <span className="model-tag">LX-1</span>
+              <span>Live Index</span>
             </div>
           </div>
           <div className="terminal-annotations-grid">

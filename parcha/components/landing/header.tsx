@@ -38,9 +38,9 @@ export function Header() {
   return (
     <header className="site-header" data-variant="hero" role="banner">
       <nav ref={navRef} className="site-nav" aria-label="Main navigation">
-        <a href="#top" className="site-logo" aria-label="Rig — Home">
+        <a href="#top" className="site-logo" aria-label="Lex — Home">
           <Image
-            src="/assets/brand/rig-wordmark.svg"
+            src="/assets/brand/lex-wordmark.svg"
             alt=""
             width={60}
             height={22}

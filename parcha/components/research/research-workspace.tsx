@@ -41,6 +41,7 @@ import type {
 } from "@/lib/research/types"
 
 import { PdfViewer } from "./pdf-viewer"
+import { ResearchAccountMenu, type ResearchUser } from "./research-account-menu"
 import styles from "./research.module.css"
 
 const HISTORY_KEY = "lex-archives:research-history:v1"
@@ -122,8 +123,10 @@ function AnswerText({
   const citationMap = new Map(citations.map((citation, index) => [citation.judgment_id, { citation, index }]))
 
   const inline = (text: string): ReactNode[] =>
-    text.split(/(\[\[[^\]]+\]\])/g).map((part, index) => {
+    text.split(/(\[\[[^\]]+\]\]|\*\*[^*]+\*\*)/g).map((part, index) => {
       const match = part.match(/^\[\[([^\]]+)\]\]$/)
+      const strongMatch = part.match(/^\*\*([^*]+)\*\*$/)
+      if (strongMatch) return <strong key={`${strongMatch[1]}-${index}`}>{strongMatch[1]}</strong>
       if (!match) return <Fragment key={`${part}-${index}`}>{part.replace(/^#{1,4}\s*/, "")}</Fragment>
       const item = citationMap.get(match[1])
       if (!item) {
@@ -195,9 +198,12 @@ function CitationCard({
         <span className={styles.citationNumber}>{String(index + 1).padStart(2, "0")}</span>
         <span className={styles.citationTitleBlock}>
           <strong>{citation.case_name}</strong>
-          <span>
+          <span className={styles.citationMeta}>
             {citation.citation} · {citation.court}
           </span>
+          {citation.excerpt ? (
+            <span className={styles.citationExcerptPreview}>{citation.excerpt}</span>
+          ) : null}
         </span>
         <span className={styles.verifiedBadge}>
           <ShieldCheck size={12} /> VERIFIED CITATION
@@ -208,10 +214,20 @@ function CitationCard({
         <div className={styles.citationDetails}>
           <div className={styles.citationCoordinates}>
             <span>JUDGMENT {sourceToken(citation.judgment_id)}</span>
+            {citation.chunk_id ? <span>CHUNK {sourceToken(citation.chunk_id)}</span> : null}
             <span>PARA {citation.paragraph_number ?? "—"}</span>
             <span>PDF PAGE {citation.pdf_page}</span>
           </div>
-          <p>{citation.relevance_note}</p>
+          {citation.excerpt ? (
+            <div className={styles.retrievedPassage}>
+              <span>RETRIEVED PASSAGE</span>
+              <blockquote>{citation.excerpt}</blockquote>
+            </div>
+          ) : null}
+          <div className={styles.relevanceReason}>
+            <span>WHY THIS CASE MATTERS</span>
+            <p>{citation.relevance_note}</p>
+          </div>
           <button type="button" className={styles.openPdfButton} onClick={onOpen}>
             <FileText size={15} /> Open source PDF <ArrowRight size={15} />
           </button>
@@ -221,7 +237,7 @@ function CitationCard({
   )
 }
 
-export function ResearchWorkspace() {
+export function ResearchWorkspace({ user }: { user: ResearchUser }) {
   const [query, setQuery] = useState("")
   const [mode, setMode] = useState<ResearchMode>("research")
   const [stages, setStages] = useState<StageMap>(initialStages)
@@ -319,6 +335,7 @@ export function ResearchWorkspace() {
     if (event.type === "result") {
       setResult(event.result)
       setStreamedAnswer(event.result.answer)
+      setQuery("")
       persistResult(event.result, submittedQuery, submittedMode)
       return
     }
@@ -329,6 +346,18 @@ export function ResearchWorkspace() {
     event?.preventDefault()
     const submittedQuery = query.trim()
     if (submittedQuery.length < 3 || running) return
+    const conversation = result
+      ? {
+          previous_query: result.analysis.original_query,
+          previous_resolved_query: result.analysis.corrected_query,
+          previous_legal_context: result.analysis.legal_context,
+          previous_citations: result.citations.slice(0, 8).map((citation) => ({
+            judgment_id: citation.judgment_id,
+            case_name: citation.case_name,
+            citation: citation.citation,
+          })),
+        }
+      : undefined
 
     abortRef.current?.abort()
     const controller = new AbortController()
@@ -346,7 +375,7 @@ export function ResearchWorkspace() {
       const response = await fetch("/api/research", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query: submittedQuery, mode }),
+        body: JSON.stringify({ query: submittedQuery, mode, conversation }),
         signal: controller.signal,
       })
       if (!response.ok || !response.body) {
@@ -388,7 +417,7 @@ export function ResearchWorkspace() {
 
   const restoreHistory = (item: HistoryItem) => {
     abortRef.current?.abort()
-    setQuery(item.query)
+    setQuery("")
     setMode(item.mode)
     setResult(item.result)
     setAnalysis(item.result.analysis)
@@ -435,6 +464,7 @@ export function ResearchWorkspace() {
           <span className={styles.headerMetric}>2.48M PASSAGES</span>
           <span className={styles.headerMetric}>SUPREME COURT</span>
         </div>
+        <ResearchAccountMenu user={user} />
         <button
           type="button"
           className={styles.mobileHistoryButton}
@@ -506,7 +536,11 @@ export function ResearchWorkspace() {
                 value={query}
                 onChange={(event) => setQuery(event.target.value.slice(0, 3000))}
                 onKeyDown={onComposerKeyDown}
-                placeholder="Describe the legal issue, doctrine, statute, or factual pattern…"
+                placeholder={
+                  hasSubmitted
+                    ? "Refine this research or ask a new legal question…"
+                    : "Describe the legal issue, doctrine, statute, or factual pattern…"
+                }
                 aria-label="Legal research query"
                 rows={hasSubmitted ? 3 : 6}
                 disabled={running}
@@ -662,7 +696,18 @@ export function ResearchWorkspace() {
               <div className={styles.panelLabel}>
                 <Sparkles size={12} /> NORMALIZED QUERY
               </div>
+              <span className={styles.contextBadge} data-follow-up={analysis.relationship === "follow_up"}>
+                {analysis.relationship === "follow_up"
+                  ? "FOLLOW-UP · PRIOR ISSUE APPLIED"
+                  : "NEW RESEARCH TOPIC"}
+              </span>
               <p>{analysis.corrected_query}</p>
+              {analysis.case_name_query ? (
+                <div className={styles.titleLookup}>
+                  <span>TITLE LOOKUP</span>
+                  <strong>{analysis.case_name_query}</strong>
+                </div>
+              ) : null}
               {analysis.corrections.length ? (
                 <div className={styles.analysisChips}>
                   {analysis.corrections.map((item) => (
@@ -693,7 +738,11 @@ export function ResearchWorkspace() {
                   <span>{sourceToken(source.judgment_id)}</span>
                   <p>{source.title}</p>
                   <div>
-                    <span>RRF {source.rrf_score.toFixed(4)}</span>
+                    <span>
+                      {source.title_match_score !== undefined
+                        ? `TITLE MATCH ${Math.round(source.title_match_score * 100)}%`
+                        : `RRF ${source.rrf_score.toFixed(4)}`}
+                    </span>
                     <span>P.{source.pdf_page}</span>
                   </div>
                 </div>

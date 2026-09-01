@@ -1,66 +1,96 @@
-# Lex Archives
+# Lex Archives application
 
-Lex Archives is a citation-grounded research workspace for Indian Supreme Court
-case law. It lives in the existing Parcha Next.js application and uses the
-already-populated Cloudflare search index as its only retrieval source.
+This Next.js application is the browser-facing backend-for-frontend. It owns
+authentication and research orchestration; the separate `cloudflare/` Worker
+owns judgment retrieval and document storage.
 
-## Research pipeline
+Production flow:
 
-`POST /api/research` returns newline-delimited JSON so every real pipeline stage
-can be rendered as it happens:
+`Browser → OpenNext app Worker → Gemini + search Worker → D1 / Vectorize / R2`
 
-1. **Spelling** — Gemini conservatively normalizes legal terms and likely party-
-   name errors, with deterministic rules for common mistakes such as `POSCO` →
-   `POCSO` as a fallback.
-2. **Acronyms** — Indian legal abbreviations are expanded before retrieval.
-3. **Legal context** — the request is classified as case-law lookup, statute
-   lookup, doctrine explanation, or drafting, and relevant legal concepts are
-   attached to the retrieval query.
-4. **Retrieval** — the enriched query is sent to the existing Cloudflare
-   endpoint, which combines D1 FTS5 and 384-dimensional BGE Vectorize results
-   with reciprocal-rank fusion. If a year-constrained search is empty, the
-   server retries without the year range.
-5. **Generation** — Gemini receives only the retrieved chunks and an allow-list
-   of their `judgment_id` values. The server validates every inline source marker,
-   replaces model-supplied citation metadata with search API metadata, and retries
-   once if a substantive paragraph is not grounded.
+Research requests support conversational follow-ups. The analyzer decides
+whether a new message refines the previous result or begins a new topic and
+turns follow-ups into standalone retrieval queries. After passage retrieval,
+the app requests bounded indexed text for the top five judgments and asks the
+model for a query-specific relevance explanation tied to an exact supporting
+chunk. Exceptionally long judgments are marked as truncated rather than being
+represented as completely read.
 
-The browser never calls Gemini or Cloudflare directly. `GEMINI_API_KEY` is read
-only in server-only modules imported by the Next.js Route Handler.
+## Authentication
 
-## Run locally
+Better Auth is mounted at `/api/auth/*` and stores users, accounts, revocable
+sessions, verification tokens, and rate limits in the dedicated `parcha-app` D1
+database bound as `AUTH_DB`. The committed migration is applied by Wrangler,
+never during request handling.
 
-The key already stored in `backend/.env` can be loaded directly into the Next.js
-server process without copying it or exposing it to the browser:
+- Email/password signup requires verification and a 12–128 character password.
+- Google OAuth only links a verified, matching email to an already verified
+  local account.
+- Verification and reset links are sent through Resend and expire in one hour.
+- A password reset revokes every existing session.
+- Sessions have a seven-day rolling expiry and refresh at most once per day.
+- `/research` has an optimistic cookie check plus authoritative D1 validation.
+- `POST /api/research` independently validates the D1 session before any model
+  or search work.
+
+## Local setup
+
+Use Node 22.13 or newer. Copy `.dev.vars.example` to `.dev.vars` and provide
+server-only credentials. Also create `.env.local` with the public/local URL if
+running plain `next dev`:
 
 ```bash
-cd parcha
+cp .dev.vars.example .dev.vars
+printf 'NEXT_PUBLIC_SITE_URL=http://localhost:3000\nBETTER_AUTH_URL=http://localhost:3000\n' > .env.local
 npm install
-npm run dev:local
+npm run d1:migrate:local
+npm run dev
 ```
 
-Open [http://localhost:3000/research](http://localhost:3000/research).
+For local email and Google flows, configure Google callbacks and Resend for the
+local application URL. Never prefix Gemini, Resend, Google client secret,
+Better Auth secret, or the search service token with `NEXT_PUBLIC_`.
 
-For deployment, set the values shown in `.env.example` in the host's server
-environment. The key currently exists in `backend/.env`. Do not rename it to
-`NEXT_PUBLIC_GEMINI_API_KEY`, import it into a Client Component, or commit
-`.env.local`.
+## Cloudflare deployment
+
+The D1 database is configured in `wrangler.jsonc`. Set secrets on the app
+Worker before production traffic is enabled:
+
+```bash
+npx wrangler secret put BETTER_AUTH_SECRET
+npx wrangler secret put GOOGLE_CLIENT_ID
+npx wrangler secret put GOOGLE_CLIENT_SECRET
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put AUTH_EMAIL_FROM
+npx wrangler secret put GEMINI_API_KEY
+npx wrangler secret put SEARCH_SERVICE_TOKEN
+npm run d1:migrate
+npm run deploy
+```
+
+Use the same random `SEARCH_SERVICE_TOKEN` on the separate search Worker. Update
+`BETTER_AUTH_URL`, `NEXT_PUBLIC_SITE_URL`, and the search Worker’s `CORS_ORIGIN`
+if a custom production hostname is used. Google’s authorized callback is:
+
+`https://<application-origin>/api/auth/callback/google`
+
+Safe structured logs include request IDs, durations, response statuses, result
+counts, and model/search stages, but omit secrets, full queries, and judgment
+text. Stream deployed application logs with:
+
+```bash
+npx wrangler tail lex-archives-app
+```
 
 ## Verification
 
 ```bash
-npm run lint
 npm run typecheck
+npm run lint
 npm run build
+npm run preview
 ```
 
-After a production build, client assets can be checked for accidental secret
-references with:
-
-```bash
-rg -n "GEMINI_API_KEY|generativelanguage.googleapis.com" .next/static
-```
-
-That command should return no matches. The server bundle will contain the
-environment variable name and Gemini hostname by design; it must not contain the
-key value.
+After building, scan tracked files and browser assets for credential values.
+Environment variable names may appear in server bundles by design; secret
+values must not.

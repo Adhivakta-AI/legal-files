@@ -6,6 +6,7 @@ import type {
   LegalIntent,
   QueryAnalysis,
   QueryCorrection,
+  ResearchConversationContext,
   ResearchMode,
 } from "./types"
 
@@ -41,6 +42,9 @@ const SPELLING_RULES: Array<[RegExp, string, string]> = [
 
 interface ModelAnalysis {
   corrected_query?: unknown
+  relationship?: unknown
+  retrieval_order?: unknown
+  case_name_query?: unknown
   corrections?: unknown
   acronym_expansions?: unknown
   intent?: unknown
@@ -54,6 +58,9 @@ const ANALYSIS_SCHEMA: Record<string, unknown> = {
   additionalProperties: false,
   properties: {
     corrected_query: { type: "string" },
+    relationship: { type: "string", enum: ["follow_up", "new_topic"] },
+    retrieval_order: { type: "string", enum: ["relevance", "recent"] },
+    case_name_query: { type: "string" },
     corrections: {
       type: "array",
       maxItems: 8,
@@ -91,6 +98,9 @@ const ANALYSIS_SCHEMA: Record<string, unknown> = {
   },
   required: [
     "corrected_query",
+    "relationship",
+    "retrieval_order",
+    "case_name_query",
     "corrections",
     "acronym_expansions",
     "intent",
@@ -104,11 +114,18 @@ const ANALYZER_SYSTEM_PROMPT = `You are the query-analysis layer for Lex Archive
 
 Your only job is to improve retrieval. Never answer the legal question and never invent facts, party names, statutes, sections, or cases.
 
+The request may include PREVIOUS RESEARCH CONTEXT. Classify the current query as:
+- follow_up when it refines, narrows, expands, compares, or refers back to the previous research; or
+- new_topic when it can be understood independently and concerns a different legal issue.
+For a follow_up, corrected_query must be a self-contained search query that combines the prior legal issue with the user's new instruction. Do not merely repeat vague wording such as "those cases" or "give me the latest cases". For a new_topic, ignore the previous context.
+
 Perform these operations conservatively:
 1. Correct clear spelling/transposition errors in Indian legal terminology and well-known statute acronyms. Preserve party names unless the correction is highly certain.
 2. Expand every Indian legal acronym that appears. Important examples include CPC, IPC, CrPC, SLP, POCSO, NI Act, NDPS, UAPA, PMLA, IBC, BNS, BNSS, and BSA.
 3. Classify intent as case_law_lookup, statute_lookup, doctrine_explanation, or drafting.
 4. Add short retrieval concepts: doctrines, remedies, constitutional articles, statutory sections, and procedural posture only when supported by the query.
+5. Set retrieval_order to recent only when the user explicitly asks for latest, newest, recent, or current authorities. Otherwise use relevance.
+6. If the user identifies a particular case by party names (for example, "A versus B", "A v. B", or "A vs B") or gives a reported citation, put only that case name/citation in case_name_query. Otherwise return an empty string. Do not invent or complete a case name.
 
 Keep corrected_query natural and concise. Put expansions in acronym_expansions rather than stuffing prose into corrected_query. If uncertain, preserve the user's wording and lower confidence.`
 
@@ -155,6 +172,33 @@ function deterministicAnalysis(query: string, mode: ResearchMode) {
     acronymExpansions,
     intent: validIntent(undefined, mode),
   }
+}
+
+function likelyFollowUp(query: string, conversation?: ResearchConversationContext): boolean {
+  if (!conversation) return false
+  return /\b(previous|above|same|these|those|them|it|that|more|other|latest|newest|recent|instead|also|first|second|third|case|cases|authority|authorities)\b/i.test(
+    query
+  )
+}
+
+function fallbackContextualQuery(
+  query: string,
+  conversation: ResearchConversationContext | undefined,
+  followUp: boolean
+): string {
+  if (!conversation || !followUp) return query
+  return `${conversation.previous_resolved_query}. Follow-up instruction: ${query}`.slice(0, 500)
+}
+
+function deterministicCaseName(query: string): string | null {
+  if (!/\s(?:v\.?|vs\.?|versus)\s/i.test(` ${query} `)) return null
+  return query
+    .replace(
+      /^(?:find|show|search for|tell me about|what (?:was|is) (?:held|decided) in|give me)\s+/i,
+      ""
+    )
+    .trim()
+    .slice(0, 240) || null
 }
 
 function correctionsFrom(value: unknown): QueryCorrection[] {
@@ -211,14 +255,23 @@ function enrichedQuery(
 export async function analyzeQuery(
   query: string,
   mode: ResearchMode,
+  conversation?: ResearchConversationContext,
   signal?: AbortSignal
 ): Promise<QueryAnalysis> {
   const rules = deterministicAnalysis(query, mode)
+  const rulesFollowUp = likelyFollowUp(query, conversation)
+  const rulesOrder = /\b(latest|newest|recent|current|most recent)\b/i.test(query)
+    ? "recent"
+    : "relevance"
 
   try {
     const modelResult = await generateJson<ModelAnalysis>({
       systemInstruction: ANALYZER_SYSTEM_PROMPT,
-      prompt: JSON.stringify({ query, requested_mode: mode }),
+      prompt: JSON.stringify({
+        current_query: query,
+        requested_mode: mode,
+        previous_research_context: conversation ?? null,
+      }),
       schema: ANALYSIS_SCHEMA,
       signal,
     })
@@ -236,11 +289,24 @@ export async function analyzeQuery(
     )
     const context = uniqueStrings(modelResult.legal_context)
     const statutes = uniqueStrings(modelResult.statutes)
+    const relationship =
+      conversation && modelResult.relationship === "follow_up"
+        ? "follow_up"
+        : "new_topic"
+    const retrievalOrder =
+      modelResult.retrieval_order === "recent" ? "recent" : rulesOrder
+    const caseNameQuery =
+      typeof modelResult.case_name_query === "string" && modelResult.case_name_query.trim()
+        ? modelResult.case_name_query.trim().slice(0, 240)
+        : deterministicCaseName(correctedQuery)
 
     return {
       original_query: query,
       corrected_query: correctedQuery,
       enriched_query: enrichedQuery(correctedQuery, expansions, context),
+      relationship,
+      retrieval_order: retrievalOrder,
+      case_name_query: caseNameQuery,
       corrections,
       acronym_expansions: expansions,
       intent: validIntent(modelResult.intent, mode),
@@ -256,10 +322,18 @@ export async function analyzeQuery(
     }
   } catch {
     const context = mode === "draft" ? ["legal drafting"] : mode === "explain" ? ["doctrine explanation"] : []
+    const correctedQuery = fallbackContextualQuery(
+      rules.correctedQuery,
+      conversation,
+      rulesFollowUp
+    )
     return {
       original_query: query,
-      corrected_query: rules.correctedQuery,
-      enriched_query: enrichedQuery(rules.correctedQuery, rules.acronymExpansions, context),
+      corrected_query: correctedQuery,
+      enriched_query: enrichedQuery(correctedQuery, rules.acronymExpansions, context),
+      relationship: rulesFollowUp ? "follow_up" : "new_topic",
+      retrieval_order: rulesOrder,
+      case_name_query: deterministicCaseName(correctedQuery),
       corrections: rules.corrections,
       acronym_expansions: rules.acronymExpansions,
       intent: rules.intent,

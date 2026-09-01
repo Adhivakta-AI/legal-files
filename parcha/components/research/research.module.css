@@ -3,7 +3,12 @@
   --panel-strong: rgba(240, 237, 230, 0.045);
   --line: rgba(240, 237, 230, 0.13);
   --line-soft: rgba(240, 237, 230, 0.075);
+  width: 100%;
+  height: 100svh;
   min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   color: var(--paper);
   background:
     linear-gradient(rgba(240, 237, 230, 0.026) 1px, transparent 1px),
@@ -19,12 +24,12 @@
 }
 
 .appHeader {
+  flex: 0 0 72px;
   height: 72px;
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) auto;
+  grid-template-columns: 260px minmax(0, 1fr) auto auto;
   align-items: stretch;
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 40;
   background: rgba(10, 10, 10, 0.94);
   border-bottom: 1px solid var(--line);
@@ -121,8 +126,114 @@
   cursor: pointer;
 }
 
+.accountMenu {
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.accountTrigger {
+  min-width: 168px;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0 1rem;
+  color: var(--paper-70);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.accountTrigger:hover,
+.accountTrigger[aria-expanded="true"] {
+  color: var(--paper);
+  background: var(--panel-strong);
+}
+
+.accountAvatar {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--ink);
+  background: var(--accent);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.accountName {
+  min-width: 0;
+  max-width: 120px;
+  overflow: hidden;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.accountPopover {
+  width: 250px;
+  position: absolute;
+  top: calc(100% + 1px);
+  right: 0;
+  z-index: 60;
+  padding: 0.45rem;
+  background: #111;
+  border: 1px solid var(--line);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
+}
+
+.accountIdentity {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.65rem 0.7rem 0.8rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.accountIdentity strong,
+.accountIdentity span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.accountIdentity strong { font-size: 0.76rem; }
+.accountIdentity span { color: var(--paper-40); font-size: 0.67rem; }
+
+.accountPopover > a,
+.accountPopover > button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem;
+  color: var(--paper-60);
+  background: transparent;
+  border: 0;
+  font-size: 0.7rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.accountPopover > a:hover,
+.accountPopover > button:hover:not(:disabled) {
+  color: var(--paper);
+  background: var(--panel-strong);
+}
+
+.accountPopover > button:last-child { color: #ffaaa0; }
+.accountPopover > button:disabled { opacity: 0.5; cursor: wait; }
+
 .shell {
-  min-height: calc(100svh - 72px);
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 260px minmax(480px, 1fr) minmax(300px, 340px);
   grid-template-areas: "history main pipeline";
@@ -137,9 +248,9 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 72px;
-  height: calc(100svh - 72px);
+  position: relative;
+  height: 100%;
+  overflow: hidden;
   background: rgba(10, 10, 10, 0.8);
   border-right: 1px solid var(--line);
 }
@@ -279,11 +390,18 @@
 .main {
   grid-area: main;
   min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: rgba(10, 10, 10, 0.55);
 }
 
 .composerSection {
-  min-height: calc(100svh - 72px);
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -292,9 +410,29 @@
 
 .composerSection[data-compact="true"] {
   min-height: auto;
+  flex: 0 0 auto;
+  order: 2;
   justify-content: flex-start;
-  padding: 1.5rem clamp(1.25rem, 3vw, 2.5rem);
-  border-bottom: 1px solid var(--line);
+  padding: 0.8rem clamp(1rem, 3vw, 2rem);
+  background: rgba(7, 7, 7, 0.96);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -18px 40px rgba(0, 0, 0, 0.28);
+}
+
+.composerSection[data-compact="true"] .composer {
+  margin: 0 auto;
+}
+
+.composerSection[data-compact="true"] .composer textarea {
+  min-height: 58px;
+  max-height: 120px;
+  resize: none;
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+}
+
+.composerSection[data-compact="true"] .composerToolbar {
+  min-height: 48px;
 }
 
 .intro {
@@ -478,8 +616,14 @@
 }
 
 .answerSection {
-  min-height: 500px;
-  padding: clamp(2rem, 4vw, 3.75rem) clamp(1.25rem, 4vw, 4rem) 5rem;
+  min-height: 0;
+  flex: 1 1 auto;
+  order: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(2rem, 4vw, 3.75rem) clamp(1.25rem, 4vw, 4rem) 3rem;
+  scrollbar-color: var(--paper-20) transparent;
+  scrollbar-width: thin;
 }
 
 .answerHeader,
@@ -737,13 +881,26 @@
   text-overflow: ellipsis;
 }
 
-.citationTitleBlock span {
+.citationMeta {
   overflow: hidden;
   color: var(--paper-35);
   font-family: "Chivo Mono", monospace;
   font-size: 0.62rem;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.citationTitleBlock .citationExcerptPreview {
+  overflow: hidden;
+  color: var(--paper-50);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.45;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .verifiedBadge {
@@ -778,9 +935,43 @@
   letter-spacing: 0.05em;
 }
 
-.citationDetails > p {
+.retrievedPassage {
+  max-width: 760px;
+  margin: 1rem 0;
+  padding: 0.9rem 1rem;
+  background: rgb(from var(--accent) r g b / 5%);
+  border-left: 2px solid rgb(from var(--accent) r g b / 65%);
+}
+
+.retrievedPassage > span {
+  color: var(--accent-light);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+}
+
+.retrievedPassage blockquote {
+  margin: 0.6rem 0 0;
+  color: var(--paper-70, rgba(240, 237, 230, 0.7));
+  font-size: 0.82rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.relevanceReason {
   max-width: 680px;
   margin: 0.8rem 0;
+}
+
+.relevanceReason > span {
+  color: var(--accent-light);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.09em;
+}
+
+.relevanceReason > p {
+  margin: 0.4rem 0 0;
   color: var(--paper-55, rgba(240, 237, 230, 0.55));
   font-size: 0.8rem;
   line-height: 1.55;
@@ -817,10 +1008,9 @@
 .pipelinePanel {
   grid-area: pipeline;
   min-width: 0;
-  position: sticky;
-  top: 72px;
-  align-self: start;
-  height: calc(100svh - 72px);
+  position: relative;
+  align-self: stretch;
+  height: 100%;
   overflow-y: auto;
   background: rgba(5, 5, 5, 0.88);
   border-left: 1px solid var(--line);
@@ -983,6 +1173,45 @@
   color: var(--paper-60);
   font-size: 0.75rem;
   line-height: 1.55;
+}
+
+.contextBadge {
+  display: inline-flex;
+  margin: 0.85rem 0 0;
+  padding: 0.25rem 0.4rem;
+  color: var(--paper-40);
+  border: 1px solid var(--line-soft);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.06em;
+}
+
+.contextBadge[data-follow-up="true"] {
+  color: var(--accent-light);
+  border-color: rgb(from var(--accent) r g b / 40%);
+}
+
+.titleLookup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.8rem;
+  padding: 0.65rem;
+  background: rgb(from var(--accent) r g b / 5%);
+  border-left: 2px solid var(--accent);
+}
+
+.titleLookup span {
+  color: var(--accent-light);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.54rem;
+  letter-spacing: 0.08em;
+}
+
+.titleLookup strong {
+  color: var(--paper-65);
+  font-size: 0.7rem;
+  font-weight: 500;
 }
 
 .analysisChips {
@@ -1206,7 +1435,7 @@
 
 @media (max-width: 1180px) {
   .appHeader {
-    grid-template-columns: 220px minmax(0, 1fr) auto;
+    grid-template-columns: 220px minmax(0, 1fr) auto auto;
   }
 
   .shell {
@@ -1220,7 +1449,7 @@
 
 @media (max-width: 1024px) {
   .appHeader {
-    grid-template-columns: minmax(0, 1fr) auto 64px;
+    grid-template-columns: minmax(0, 1fr) auto auto 64px;
   }
 
   .brand {
@@ -1288,8 +1517,9 @@
 
 @media (max-width: 760px) {
   .appHeader {
+    flex-basis: 62px;
     height: 62px;
-    grid-template-columns: minmax(0, 1fr) 52px;
+    grid-template-columns: minmax(0, 1fr) auto 52px;
   }
 
   .brand {
@@ -1301,13 +1531,26 @@
     display: none;
   }
 
+  .accountTrigger {
+    min-width: auto;
+    padding: 0 0.7rem;
+    border-left: 1px solid var(--line);
+  }
+
+  .accountName,
+  .accountTrigger > svg {
+    display: none;
+  }
+
   .mobileHistoryButton {
     width: 52px;
     border-left: 1px solid var(--line);
   }
 
   .shell {
-    min-height: calc(100svh - 62px);
+    height: auto;
+    min-height: 0;
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
   }
@@ -1315,9 +1558,11 @@
   .pipelinePanel {
     width: 100%;
     height: auto;
-    max-height: none;
+    max-height: 152px;
+    flex: 0 0 auto;
     position: static;
     order: 1;
+    overflow: hidden;
     border-left: 0;
     border-bottom: 1px solid var(--line);
   }
@@ -1343,22 +1588,31 @@
   }
 
   .main {
+    min-height: 0;
+    height: auto;
+    flex: 1 1 auto;
     order: 2;
   }
 
   .composerSection {
-    min-height: calc(100svh - 62px);
+    min-height: 0;
     padding: 2rem 1rem;
   }
 
   .composerSection[data-compact="true"] {
     min-height: auto;
-    padding: 1rem;
+    padding: 0.65rem;
   }
 
   .composer textarea {
     min-height: 130px;
     padding: 1.1rem;
+  }
+
+  .composerSection[data-compact="true"] .composer textarea {
+    min-height: 54px;
+    max-height: 92px;
+    padding: 0.7rem 0.85rem;
   }
 
   .composerToolbar {
@@ -1397,7 +1651,8 @@
   }
 
   .answerSection {
-    padding: 2rem 1rem 4rem;
+    min-height: 0;
+    padding: 2rem 1rem 2.5rem;
   }
 
   .answerHeader,

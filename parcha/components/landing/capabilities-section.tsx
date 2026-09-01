@@ -2,36 +2,36 @@ import { Badge, SectionDivider } from "./primitives"
 
 const capabilities = [
   [
-    "Understands your architecture.",
-    "Builds a connected model of modules, dependencies, and relationships so reasoning happens across files and aligns with your architecture.",
+    "Understands the proposition.",
+    "Ask for a point of law in plain English. The engine resolves the ratio you are after instead of matching the words you happened to type.",
   ],
   [
-    "Tracks relationships, prevents breakage.",
-    "Edits that respect function contracts, type boundaries, and dependency graphs — reducing bugs and regressions.",
+    "Maps the citation graph.",
+    "Followed, distinguished, doubted, overruled — every relationship between judgments is extracted and kept current, down to the paragraph.",
   ],
   [
-    "Strategizes before acting.",
-    "Explore → Plan → Execute workflows ensure multiple steps are reasoned out before changes occur.",
+    "Reads the whole record.",
+    "Supreme Court, every High Court, and specialised tribunals in one index. No switching platforms halfway through a search.",
   ],
   [
-    "Executes complex coding workflows.",
-    "From refactors to test generation to feature builds — coordinate tools, code edits, web search, and commands as needed.",
+    "Handles the messy originals.",
+    "Our parser cleans scanned and badly typeset judgments, recovers structure, and normalises citations so nothing is lost to a bad PDF.",
   ],
   [
-    "Isolates agent sandboxes.",
-    "Each agent runs in its own workspace so experiments are safe, parallel workflows don’t clash, and code changes stay isolated until you merge them.",
+    "Pinpoints the paragraph.",
+    "Results open on the passage that answers the question, with the surrounding reasoning intact and the pinpoint citation ready to copy.",
   ],
   [
-    "Runs at full speed.",
-    "Custom Rust inference engine optimized for CUDA and Metal — delivering up to 144 tokens per second on consumer hardware.",
+    "Loads at the speed of thought.",
+    "No frames, no spinners, no ten-click path to the judgment. The interface gets out of the way and stays out of it.",
   ],
 ]
 
 const stats = [
-  ["Latency", "0ms", "No round-trip required"],
-  ["Privacy", "100%", "Air-gapped by design"],
-  ["Cost / Token", "$0", "Your GPU, your tokens"],
-  ["Uptime", "Local", "No dependency on cloud"],
+  ["Corpus", "SC + HC", "Plus specialised tribunals"],
+  ["Search input", "Plain English", "No operators to learn"],
+  ["Citations", "Verified", "Cross-referenced and linked"],
+  ["Interface", "Zero bloat", "Judgment first, always"],
 ]
 
 export function CapabilitiesSection() {
@@ -43,7 +43,7 @@ export function CapabilitiesSection() {
             Capabilities
           </Badge>
           <h2 className="section-title capabilities-title" data-reveal>
-            Your machine, unleashed.
+            Every ruling, within reach.
           </h2>
           <div className="illust-grid" data-stagger>
             {capabilities.map(([title, description], index) => (
@@ -61,7 +61,7 @@ export function CapabilitiesSection() {
       <SectionDivider />
       <section
         className="stats-strip"
-        aria-label="Rig performance statistics"
+        aria-label="Lex platform highlights"
         data-stagger
       >
         {stats.map(([label, value, note]) => (

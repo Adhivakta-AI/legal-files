@@ -3,12 +3,20 @@
   "version": "0.0.1",
   "type": "module",
   "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:local": "node --env-file=../backend/.env node_modules/next/dist/bin/next dev",
     "build": "next build",
     "start": "next start",
     "start:local": "node --env-file=../backend/.env node_modules/next/dist/bin/next start",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "d1:migrate": "wrangler d1 migrations apply parcha-app --remote",
+    "d1:migrate:local": "wrangler d1 migrations apply parcha-app --local",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit"
@@ -16,14 +24,17 @@
   "dependencies": {
     "@base-ui/react": "^1.7.0",
     "@gsap/react": "^2.1.2",
+    "@opennextjs/cloudflare": "^1.20.4",
+    "better-auth": "^1.7.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "gsap": "^3.15.0",
     "lucide-react": "^1.31.0",
-    "next": "16.2.6",
+    "next": "^16.3.3",
     "next-themes": "^0.4.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "resend": "^6.25.0",
     "shadcn": "^4.16.2",
     "tailwind-merge": "^3.6.0",
     "tw-animate-css": "^1.4.0"
@@ -34,10 +45,11 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.6",
+    "eslint-config-next": "^16.3.3",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.127.1"
   }
 }

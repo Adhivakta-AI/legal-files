@@ -2,36 +2,36 @@ import { Badge, ChevronDown } from "./primitives"
 
 const questions = [
   [
-    "What is Rig?",
-    "Rig is a local-first AI coding assistant that runs entirely on your machine. It uses a modified open-source model post-trained exclusively for code, executed by a custom Rust inference engine optimized for Apple Silicon. Rig delivers fast and low latency agentic coding, requires no API calls, has no usage caps, collects zero telemetry, and costs $0 per token. All code and files stay on your machine. Rig currently supports macOS with Linux and Windows support planned.",
+    "What is Lex?",
+    "Lex is a legal precedent engine for Indian law. It indexes rulings from the Supreme Court, the High Courts, and specialised tribunals, and lets you search them the way you would ask a colleague — in plain English, without operators or wildcards. Every result comes back with its citation chain resolved, so you can see how an authority has been treated before you rely on it.",
   ],
   [
-    "What Model does Rig use?",
-    "Rig uses a customized open source model. We modified it to work exclusively with the Rig agent harness, context engine, and tools. This allows us to shrink the model's total footprint without losing intelligence or coding capability.",
+    "How is this different from the databases I already use?",
+    "Legacy platforms are keyword indexes with a search form bolted on: you translate your question into their query language and hope the words match. Lex resolves the proposition behind the question and retrieves the authority on that point, then puts the judgment on screen without the frames, spinners, and clicks in between.",
   ],
   [
-    "What are the Hardware Requirements?",
-    "Rig is currently optimized to run on Apple Silicon devices using M2 or later with at least 32GB of RAM. We hope to continue optimizing to reduce the memory requirements and one day work well with only 16GB of RAM. Support for Window and Linux are coming soon.",
+    "What does the corpus cover?",
+    "Supreme Court and High Court judgments, along with specialised tribunals. Ingestion is continuous — our parser cleans messy scans, extracts cross-citations, and categorises ratios automatically, so new rulings enter the index fully mapped rather than waiting on a manual editor.",
   ],
   [
-    "How Does Rig Compare to Large Cloud Models?",
-    "Rig's model is still in development so we do not have benchmarks available yet. Our early tests indicate the Rig model will be on par with state of the art models thanks to the combination of our context engine and post training pipeline.",
+    "Can I rely on the citations?",
+    "That is the point of the product. Every ruling is hyperlinked and cross-referenced with paragraph-level pinpoints, and the treatment history — followed, distinguished, doubted, overruled — travels with the result. The judgment call stays yours, but the verification legwork is already done.",
   ],
   [
-    "Can Rig Search the Web?",
-    "Yes, Rig has all the same tools you'd expect from a coding agent, including web search, file read / write, plan mode, and more.",
+    "Does it write my arguments for me?",
+    "No. Lex finds and verifies authority; it does not draft your case or replace your reading of a judgment. It gives you the ruling, the passage, and the citation, and gets out of the way.",
   ],
   [
-    "How will Rig be Priced?",
-    "Rig's pricing model is planned to be a flat monthly or annual subscription on par with other coding agents but completely unlimited  and offline.",
+    "Is my research confidential?",
+    "Yes. Your queries describe your matter, so we treat them as privileged work product. They are not sold, not shared, and not used to train models for anyone else.",
   ],
   [
-    "Will Rig Collect my Data?",
-    "No, Rig is committed to being the most secure and private coding agent available. Our telemetry will be limited to a license check with a grace period. Your code and conversations will never leave your machine.",
+    "How will Lex be priced?",
+    "We are planning a flat subscription for individual advocates, with chamber and firm tiers, rather than per-search or per-document metering. Final pricing goes out to the waitlist before launch.",
   ],
   [
-    "When Will Rig be Available?",
-    "We are rolling out closed beta access now. Keep an eye on your email for an invite to the test builds and slack community. Wider release is planned for Q3 2026. We're focused on creating the best possible coding assistant capable of supporting real software engineers on their most important projects.",
+    "When will Lex be available?",
+    "We are rolling out early access now. Join the waitlist and we will send an invite as capacity opens up, along with the chance to shape what ships before wider release.",
   ],
 ]
 

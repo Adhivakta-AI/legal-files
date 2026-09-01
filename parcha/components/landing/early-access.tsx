@@ -46,10 +46,10 @@ export function EarlyAccess() {
             <Badge className="ea-badge" icon="early">
               Early access
             </Badge>
-            <h2 className="section-title ea-title">Rig is almost ready.</h2>
+            <h2 className="section-title ea-title">Lex is almost ready.</h2>
             <p className="ea-desc">
-              We&apos;re inviting engineers to run it on real code and help
-              shape what ships.
+              We&apos;re inviting advocates and chambers to run it on real
+              matters and help shape what ships.
             </p>
           </div>
           <div className="waitlist-form-wrapper ea-form-centered">
@@ -63,7 +63,7 @@ export function EarlyAccess() {
                     id="waitlist-email"
                     className="email-input"
                     type="email"
-                    placeholder="you@company.com"
+                    placeholder="you@chambers.in"
                     required
                   />
                   <button className="submit-button btn-chamfer" type="submit">

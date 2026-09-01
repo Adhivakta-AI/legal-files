@@ -1,0 +1,11 @@
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+RESEND_API_KEY=
+AUTH_EMAIL_FROM=Lex Archives <auth@example.com>
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.5-flash
+SEARCH_API_URL=https://parcha-search-api.politestranger18.workers.dev/api/search
+SEARCH_SERVICE_TOKEN=

@@ -2,51 +2,50 @@ import { Badge } from "./primitives"
 
 const problems = [
   {
-    label: "Data extraction",
+    label: "Query gymnastics",
     number: "001",
-    title: "They train on your code.",
+    title: "They make you speak machine.",
     body: (
       <>
-        Every prompt. Every file. Every fix.
+        Proximity operators. Nested Booleans. Wildcards.
         <br />
-        It flows through infrastructure you don&apos;t control — improving
-        systems they want to use to replace you.
+        Legacy platforms force you to learn a query language just to find a
+        single ruling.
       </>
     ),
   },
   {
-    label: "Artificial scarcity",
+    label: "Interface bloat",
     number: "002",
-    title: "They meter your ambition.",
+    title: "They make you wait to read.",
     body: (
       <>
-        Slowdowns, overages, caps.
+        Frames inside frames. Ten clicks to the paragraph.
         <br />
-        Right when you&apos;re deep in a sprint, the meter decides you&apos;ve
-        had enough.
+        The judgment itself loads last, if it loads at all.
       </>
     ),
   },
   {
-    label: "Silent downgrades",
+    label: "Unverifiable results",
     number: "003",
-    title: "They change the model.",
+    title: "They make you check twice.",
     body: (
       <>
-        They silently downgrade to cheaper models during peak load. Full price,
-        degraded experience.
+        Broken cross-references and citations you cannot follow. Every result
+        has to be re-verified before it goes near a filing.
       </>
     ),
   },
   {
-    label: "Cloud dependency",
+    label: "Fragmented coverage",
     number: "004",
-    title: "They control your flow.",
+    title: "They make you open five tabs.",
     body: (
       <>
-        Every completion makes a round trip across the internet.
+        Supreme Court here, High Courts there, tribunals elsewhere.
         <br />
-        Thousands of tiny interruptions, every single day.
+        The record of Indian law sits scattered across a dozen silos.
       </>
     ),
   },
@@ -119,7 +118,7 @@ function SurveillanceEye() {
         fontSize="5"
         letterSpacing="0.2em"
       >
-        MONITORING ACTIVE
+        SEARCHING…
       </text>
       <text
         x="456"
@@ -131,7 +130,7 @@ function SurveillanceEye() {
         letterSpacing="0.15em"
         transform="rotate(90 465 240)"
       >
-        TELEMETRY
+        NO RESULTS
       </text>
       <circle
         id="eye-pupil"
@@ -155,9 +154,9 @@ export function ProblemSection() {
               The problem
             </Badge>
             <h2 className="display problem-headline" data-reveal>
-              You don&apos;t own your AI.
+              Finding the ruling
               <br />
-              And you&apos;re being watched.
+              is harder than reading it.
             </h2>
           </div>
           <div className="problem-divider" />

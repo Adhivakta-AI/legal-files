@@ -3,18 +3,16 @@ import "./globals.css"
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://lex-archives-app.politestranger18.workers.dev"
   ),
-  title: "Rig - Local-First AI Coding Assistant",
+  title: "Lex Archives — Indian Case-Law Research",
   description:
-    "A complete AI coding agent that executes entirely on your machine. No API calls. No usage caps. No cloud dependency.",
-  icons: { icon: "/assets/brand/rig-icon.svg" },
+    "Citation-grounded research across Indian Supreme Court judgments.",
   openGraph: {
-    title: "Rig - Local-First AI Coding Assistant",
+    title: "Lex Archives — Indian Case-Law Research",
     description:
-      "A complete AI coding agent that executes entirely on your machine. No API calls. No usage caps. No cloud dependency.",
+      "Citation-grounded research across Indian Supreme Court judgments.",
     type: "website",
-    images: [{ url: "/assets/brand/rig-graph.png", width: 1200, height: 630 }],
   },
 }
 

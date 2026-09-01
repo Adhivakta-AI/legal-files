@@ -30,6 +30,9 @@ export interface QueryAnalysis {
   original_query: string
   corrected_query: string
   enriched_query: string
+  relationship: "follow_up" | "new_topic"
+  retrieval_order: "relevance" | "recent"
+  case_name_query: string | null
   corrections: QueryCorrection[]
   acronym_expansions: AcronymExpansion[]
   intent: LegalIntent
@@ -54,6 +57,14 @@ export interface SearchChunk {
   keyword_score: number | null
   semantic_score: number | null
   rrf_score: number
+  title_match_score?: number
+}
+
+export interface JudgmentContext {
+  judgment_id: string
+  chunks: SearchChunk[]
+  truncated: boolean
+  included_characters: number
 }
 
 export interface Citation {
@@ -65,6 +76,8 @@ export interface Citation {
   pdf_url: string
   pdf_page: number
   relevance_note: string
+  chunk_id?: string
+  excerpt?: string
 }
 
 export interface ResearchAnswer {
@@ -110,4 +123,16 @@ export interface ResearchRequest {
   mode: ResearchMode
   year_from?: number
   year_to?: number
+  conversation?: ResearchConversationContext
+}
+
+export interface ResearchConversationContext {
+  previous_query: string
+  previous_resolved_query: string
+  previous_legal_context: string[]
+  previous_citations: Array<{
+    judgment_id: string
+    case_name: string
+    citation: string
+  }>
 }

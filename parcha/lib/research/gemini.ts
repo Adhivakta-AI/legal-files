@@ -1,5 +1,7 @@
 import "server-only"
 
+import { requiredServerSetting, serverSetting } from "@/lib/server-env"
+
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 
 export class GeminiRequestError extends Error {
@@ -21,17 +23,11 @@ interface GeminiResponse {
 }
 
 function apiKey(): string {
-  const value = process.env.GEMINI_API_KEY
-  if (!value) {
-    throw new Error(
-      "GEMINI_API_KEY is not configured on the Parcha server. See parcha/.env.example."
-    )
-  }
-  return value
+  return requiredServerSetting("GEMINI_API_KEY")
 }
 
 function model(): string {
-  const value = process.env.GEMINI_MODEL ?? "gemini-2.5-flash"
+  const value = serverSetting("GEMINI_MODEL") ?? "gemini-2.5-flash"
   if (!/^[a-zA-Z0-9._-]+$/.test(value)) {
     throw new Error("GEMINI_MODEL contains unsupported characters")
   }
@@ -50,6 +46,13 @@ async function geminiFetch(
 ): Promise<Response> {
   const body = init.body
   for (let attempt = 0; attempt < 2; attempt += 1) {
+    const startedAt = performance.now()
+    const operation = new URL(url).pathname.split("/").at(-1) ?? "generateContent"
+    console.info(JSON.stringify({
+      event: "gemini.request",
+      operation,
+      attempt: attempt + 1,
+    }))
     let response: Response
     try {
       response = await fetch(url, {
@@ -58,6 +61,12 @@ async function geminiFetch(
         signal: boundedSignal(init.signal ?? undefined, timeoutMs),
       })
     } catch (error) {
+      console.error(JSON.stringify({
+        event: "gemini.network_error",
+        operation,
+        attempt: attempt + 1,
+        duration_ms: Math.round(performance.now() - startedAt),
+      }))
       if (init.signal?.aborted) throw error
       if (attempt === 0) {
         await new Promise((resolve) => setTimeout(resolve, 700 + Math.random() * 300))
@@ -65,6 +74,14 @@ async function geminiFetch(
       }
       throw new GeminiRequestError("Gemini timed out before returning a response", 504)
     }
+
+    console.info(JSON.stringify({
+      event: "gemini.response",
+      operation,
+      attempt: attempt + 1,
+      status: response.status,
+      duration_ms: Math.round(performance.now() - startedAt),
+    }))
 
     if (response.ok) return response
     const responseBody = await response.text()

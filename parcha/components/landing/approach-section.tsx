@@ -13,115 +13,115 @@ const nbsp = (count: number) => "\u00a0".repeat(count)
 
 const steps = [
   {
-    title: "A focused model, trained specifically for coding.",
+    title: "Exhaustive jurisprudential mapping.",
     paragraphs: [
-      "Every parameter in the model is dedicated to coding, planning, tool use, and structured edits. The entire training process is focused on engineering work.",
-      "By narrowing the domain, we concentrate intelligence where it matters — deeper reasoning, better code, sharper tool use.",
+      "We continuously ingest and structure raw rulings from the Supreme Court, High Courts, and specialised tribunals. Our parser cleans messy scans, extracts cross-citations, and categorises ratios automatically.",
+      "Nothing waits on a human indexer. A judgment delivered this morning is parsed, linked, and searchable by the time you go looking for it.",
     ],
-    cardTitle: "Training Focus",
+    cardTitle: "Corpus Coverage",
     card: (
       <>
-        <span className="hl-dim">Parameters dedicated to code</span>
+        <span className="hl-dim">Judgments mapped into the index</span>
         <br />
         <br />
-        <span className="hl-bright">Rig</span>
-        {nbsp(11)}
+        <span className="hl-bright">Lex</span>
+        {nbsp(13)}
         <span className="hl-green">████████████████████</span>{" "}
-        <span className="hl-green">100%</span>
+        <span className="hl-green">SC · HC · tribunals</span>
         <br />
-        <span className="hl-dim">Most AI models</span>{" "}
+        <span className="hl-dim">Legacy platforms</span>{" "}
         <span className="hl-dim">████░░░░░░░░░░░░░░░░</span>{" "}
-        <span className="hl-dim">~15–20%</span>
+        <span className="hl-dim">partial · manual</span>
         <br />
         <br />
         <span className="hl-dim">
-          General-purpose models spread capacity
+          Legacy databases index what an
           <br />
-          across chat, translation, creative
+          editor got around to reading,
           <br />
-          writing, and more.
+          when they got around to it.
         </span>
         <br />
         <br />
         <span className="hl-bright">
-          Rig dedicates every parameter
+          Lex maps the whole record,
           <br />
-          to engineering.
+          continuously.
         </span>
       </>
     ),
   },
   {
-    title: "Full intelligence, compressed to fit your machine.",
+    title: "Intent-first retrieval, not keyword matching.",
     paragraphs: [
-      "The model is compressed to run efficiently on consumer machines — carefully preserving the reasoning patterns that matter most.",
-      "The result is an 8 GB model that fits comfortably in memory on a MacBook. Full reasoning. Local execution. Zero cost per token.",
+      "The engine resolves what you are actually asking — the proposition, the ratio, the point of law — instead of hunting for the exact words you happened to type.",
+      "No proximity operators. No wildcards. No nested Booleans. Ask it the way you would ask a senior in chambers.",
     ],
-    cardTitle: "Model Size",
+    cardTitle: "Search Input",
     card: (
       <>
-        <span className="hl-dim">Model size (memory required)</span>
+        <span className="hl-dim">Syntax you have to learn</span>
         <br />
         <br />
-        <span className="hl-dim">Cloud models</span>
-        {nbsp(1)}
-        <span className="hl-dim">████████████████████</span>{" "}
-        <span className="hl-dim">200+ GB</span>
-        <br />
-        <span className="hl-dim">Open source</span>
+        <span className="hl-dim">Boolean ops</span>
         {nbsp(2)}
-        <span className="hl-dim">██████░░░░░░░░░░░░░░</span>{" "}
-        <span className="hl-dim">28–140 GB</span>
+        <span className="hl-dim">████████████████████</span>{" "}
+        <span className="hl-dim">required</span>
         <br />
-        <span className="hl-bright">Rig</span>
+        <span className="hl-dim">Wildcards</span>
+        {nbsp(4)}
+        <span className="hl-dim">██████░░░░░░░░░░░░░░</span>{" "}
+        <span className="hl-dim">required</span>
+        <br />
+        <span className="hl-bright">Lex</span>
         {nbsp(10)}
         <span className="hl-green">▎</span>
         <span className="hl-dim">░░░░░░░░░░░░░░░░░░░</span>{" "}
-        <span className="hl-green">8 GB</span>
+        <span className="hl-green">plain English</span>
         <br />
         <br />
-        <span className="hl-dim">Fits in 16 GB unified memory.</span>
+        <span className="hl-dim">One question in.</span>
         <br />
-        <span className="hl-dim">Accuracy loss:</span>{" "}
-        <span className="hl-green">&lt;0.3%</span>
+        <span className="hl-dim">Authority out:</span>{" "}
+        <span className="hl-green">verified</span>
       </>
     ),
   },
   {
-    title: "A custom runtime, engineered for Apple Silicon.",
+    title: "Citations built to be filed, not just read.",
     paragraphs: [
-      "The model runs through a custom inference engine optimized specifically for Apple Silicon. Model, context engine, and tools are designed as a single coordinated system.",
-      "That tight integration is what makes local execution fast, reliable, and practical.",
+      "Every result carries its full citation chain — what it followed, what it distinguished, and what has since been overruled — resolved at the paragraph level.",
+      "You see the standing of an authority before you rely on it, so nothing goes into a filing that cannot survive the bench.",
     ],
-    cardTitle: "Performance",
+    cardTitle: "Verification",
     card: (
       <>
-        <span className="hl-dim">First token latency</span>
+        <span className="hl-dim">Time spent verifying</span>
         <br />
         <br />
-        <span className="hl-bright">Rig</span>
+        <span className="hl-bright">Lex</span>
         {nbsp(10)}
         <span className="hl-green">▎</span>
         <span className="hl-dim">░░░░░░░░░░░░░░░░░░░</span>{" "}
-        <span className="hl-green">300 ms</span>
+        <span className="hl-green">seconds</span>
         <br />
-        <span className="hl-dim">Cloud APIs</span>
-        {nbsp(3)}
+        <span className="hl-dim">Manual check</span>
+        {nbsp(1)}
         <span className="hl-dim">████████████████████</span>{" "}
-        <span className="hl-dim">400–1,000 ms</span>
+        <span className="hl-dim">hours per issue</span>
         <br />
         <br />
-        <span className="hl-dim">Cost per 1K tokens</span>
+        <span className="hl-dim">Treatment history</span>
         <br />
         <br />
-        <span className="hl-bright">Rig</span>
+        <span className="hl-bright">Lex</span>
         {nbsp(30)}
-        <span className="hl-green">$0.00</span>
+        <span className="hl-green">resolved</span>
         <br />
-        <span className="hl-dim">Cloud APIs</span>
-        {nbsp(3)}
+        <span className="hl-dim">Manual check</span>
+        {nbsp(1)}
         <span className="hl-dim">████████████████████</span>{" "}
-        <span className="hl-dim">$0.01–0.06</span>
+        <span className="hl-dim">tab by tab</span>
       </>
     ),
   },
@@ -246,11 +246,11 @@ export function ApproachSection() {
             Our Approach
           </Badge>
           <h2 className="how-intro-heading section-title">
-            Purpose beats scale.
+            Legal research rebuilt from the index up.
           </h2>
           <p className="how-intro-body">
-            Rig is a closed system — model, context, tools, and inference —
-            engineered together for one job: real coding work.
+            We discarded legacy database structures and engineered an
+            intent-first search pipeline designed for active litigators.
           </p>
         </div>
         <div

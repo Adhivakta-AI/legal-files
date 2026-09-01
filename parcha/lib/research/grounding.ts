@@ -3,6 +3,7 @@ import "server-only"
 import { GeminiRequestError, streamJson } from "./gemini"
 import type {
   Citation,
+  JudgmentContext,
   QueryAnalysis,
   ResearchAnswer,
   ResearchMode,
@@ -22,6 +23,7 @@ const ANSWER_SCHEMA: Record<string, unknown> = {
         additionalProperties: false,
         properties: {
           judgment_id: { type: "string" },
+          chunk_id: { type: "string" },
           case_name: { type: "string" },
           citation: { type: "string" },
           court: { type: "string" },
@@ -32,6 +34,7 @@ const ANSWER_SCHEMA: Record<string, unknown> = {
         },
         required: [
           "judgment_id",
+          "chunk_id",
           "case_name",
           "citation",
           "court",
@@ -58,6 +61,8 @@ Hard grounding rules:
 - Every substantive paragraph or bullet containing a legal claim must include at least one inline marker in the exact form [[judgment_id]].
 - Use only judgment_id values present in the supplied source allow-list.
 - Do not claim that a source establishes more than its excerpt supports. Distinguish holdings from observations and factual background.
+- For every cited judgment, explain specifically why it is relevant to the user's resolved query. Identify the proposition, factual analogy, distinction, or procedural principle supported by its indexed text.
+- Each citations entry must name the exact supporting chunk_id that best supports its relevance_note. Use only a supplied chunk_id belonging to that judgment.
 - If the excerpts are insufficient, say exactly what cannot be established and set confidence to low. Never fill gaps from memory.
 - The citations array must contain one entry for every judgment_id used inline. Metadata will be verified by the server.
 - Write for an Indian legal professional: direct, structured, careful, and useful. This is research assistance, not a substitute for advice from counsel.
@@ -66,6 +71,7 @@ Return only the requested JSON object.`
 
 interface UntrustedCitation {
   judgment_id?: unknown
+  chunk_id?: unknown
   relevance_note?: unknown
 }
 
@@ -96,17 +102,39 @@ function sourceBlock(chunks: SearchChunk[]): string {
     .join("\n\n--- NEXT SOURCE ---\n\n")
 }
 
+function judgmentContextBlock(contexts: JudgmentContext[]): string {
+  if (!contexts.length) return "No additional indexed judgment text was available."
+  return contexts
+    .map((context) => {
+      const header = JSON.stringify({
+        judgment_id: context.judgment_id,
+        indexed_text_complete: !context.truncated,
+        included_characters: context.included_characters,
+      })
+      const text = context.chunks
+        .map(
+          (chunk) =>
+            `[CHUNK ${chunk.chunk_id} · PDF PAGE ${chunk.pdf_page} · PARA ${chunk.paragraph_number ?? "—"}]\n${chunk.chunk_text}`
+        )
+        .join("\n\n")
+      return `${header}\n${text}`
+    })
+    .join("\n\n=== NEXT JUDGMENT ===\n\n")
+}
+
 function buildPrompt({
   query,
   mode,
   analysis,
   chunks,
+  judgmentContexts,
   correction,
 }: {
   query: string
   mode: ResearchMode
   analysis: QueryAnalysis
   chunks: SearchChunk[]
+  judgmentContexts: JudgmentContext[]
   correction?: string
 }): string {
   return `USER QUERY:\n${query}\n\nREQUESTED MODE:\n${mode}\n\nQUERY ANALYSIS:\n${JSON.stringify(
@@ -120,7 +148,7 @@ function buildPrompt({
     2
   )}\n\nALLOWED JUDGMENT IDS:\n${[...new Set(chunks.map((chunk) => chunk.judgment_id))].join(
     "\n"
-  )}\n\nRETRIEVED SOURCES:\n${sourceBlock(chunks)}${
+  )}\n\nPRIMARY RETRIEVED PASSAGES:\n${sourceBlock(chunks)}\n\nINDEXED JUDGMENT TEXT:\n${judgmentContextBlock(judgmentContexts)}${
     correction ? `\n\nRETRY INSTRUCTION:\n${correction}` : ""
   }`
 }
@@ -153,7 +181,11 @@ function citationsFrom(value: unknown): UntrustedCitation[] {
     : []
 }
 
-function groundAnswer(raw: UntrustedAnswer, chunks: SearchChunk[]): ResearchAnswer {
+function groundAnswer(
+  raw: UntrustedAnswer,
+  chunks: SearchChunk[],
+  judgmentContexts: JudgmentContext[]
+): ResearchAnswer {
   if (typeof raw.answer !== "string" || !raw.answer.trim()) {
     throw new Error("Gemini returned an empty answer")
   }
@@ -165,16 +197,26 @@ function groundAnswer(raw: UntrustedAnswer, chunks: SearchChunk[]): ResearchAnsw
   chunks.forEach((chunk) => {
     if (!sourceByJudgment.has(chunk.judgment_id)) sourceByJudgment.set(chunk.judgment_id, chunk)
   })
+  const sourceByChunk = new Map<string, SearchChunk>()
+  ;[...chunks, ...judgmentContexts.flatMap((context) => context.chunks)].forEach((chunk) => {
+    if (!sourceByChunk.has(chunk.chunk_id)) sourceByChunk.set(chunk.chunk_id, chunk)
+  })
   const notes = new Map<string, string>()
+  const supportingChunks = new Map<string, string>()
   citationsFrom(raw.citations).forEach((citation) => {
     if (typeof citation.judgment_id !== "string") return
     if (typeof citation.relevance_note !== "string") return
     notes.set(citation.judgment_id, citation.relevance_note.trim().slice(0, 260))
+    if (typeof citation.chunk_id === "string") {
+      supportingChunks.set(citation.judgment_id, citation.chunk_id)
+    }
   })
 
   const citations: Citation[] = [...new Set(inlineIds(answer))].map((id) => {
-    const source = sourceByJudgment.get(id)
-    if (!source) throw new Error(`Citation ${id} is not present in the retrieved sources`)
+    const primarySource = sourceByJudgment.get(id)
+    if (!primarySource) throw new Error(`Citation ${id} is not present in the retrieved sources`)
+    const requestedSource = sourceByChunk.get(supportingChunks.get(id) ?? "")
+    const source = requestedSource?.judgment_id === id ? requestedSource : primarySource
     return {
       judgment_id: source.judgment_id,
       case_name: source.title,
@@ -184,6 +226,8 @@ function groundAnswer(raw: UntrustedAnswer, chunks: SearchChunk[]): ResearchAnsw
       pdf_url: source.pdf_url,
       pdf_page: source.pdf_page,
       relevance_note: notes.get(id) || "Retrieved passage supporting the cited proposition.",
+      chunk_id: source.chunk_id,
+      excerpt: source.chunk_text.trim().slice(0, 2400),
     }
   })
 
@@ -211,6 +255,7 @@ async function generateAttempt({
   mode,
   analysis,
   chunks,
+  judgmentContexts,
   correction,
   signal,
 }: {
@@ -218,6 +263,7 @@ async function generateAttempt({
   mode: ResearchMode
   analysis: QueryAnalysis
   chunks: SearchChunk[]
+  judgmentContexts: JudgmentContext[]
   correction?: string
   signal?: AbortSignal
 }): Promise<ResearchAnswer> {
@@ -225,14 +271,14 @@ async function generateAttempt({
 
   for await (const fragment of streamJson({
     systemInstruction: GENERATION_SYSTEM_PROMPT,
-    prompt: buildPrompt({ query, mode, analysis, chunks, correction }),
+    prompt: buildPrompt({ query, mode, analysis, chunks, judgmentContexts, correction }),
     schema: ANSWER_SCHEMA,
     signal,
   })) {
     json += fragment
   }
 
-  return groundAnswer(JSON.parse(json) as UntrustedAnswer, chunks)
+  return groundAnswer(JSON.parse(json) as UntrustedAnswer, chunks, judgmentContexts)
 }
 
 function citationSafeFallback(chunks: SearchChunk[]): ResearchAnswer {
@@ -258,6 +304,8 @@ function citationSafeFallback(chunks: SearchChunk[]): ResearchAnswer {
       pdf_url: source.pdf_url,
       pdf_page: source.pdf_page,
       relevance_note: "Retrieved authority requiring direct review after synthesis validation failed.",
+      chunk_id: source.chunk_id,
+      excerpt: source.chunk_text.trim().slice(0, 2400),
     })),
     statutes_referenced: [],
     confidence: "low",
@@ -269,6 +317,7 @@ export async function generateGroundedAnswer({
   mode,
   analysis,
   chunks,
+  judgmentContexts,
   signal,
   onRetry,
 }: {
@@ -276,6 +325,7 @@ export async function generateGroundedAnswer({
   mode: ResearchMode
   analysis: QueryAnalysis
   chunks: SearchChunk[]
+  judgmentContexts: JudgmentContext[]
   signal?: AbortSignal
   onRetry: (reason: string) => void
 }): Promise<ResearchAnswer> {
@@ -283,7 +333,15 @@ export async function generateGroundedAnswer({
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      return await generateAttempt({ query, mode, analysis, chunks, correction, signal })
+      return await generateAttempt({
+        query,
+        mode,
+        analysis,
+        chunks,
+        judgmentContexts,
+        correction,
+        signal,
+      })
     } catch (error) {
       if (error instanceof GeminiRequestError || (error instanceof DOMException && error.name === "AbortError")) {
         throw error

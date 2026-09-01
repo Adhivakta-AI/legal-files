@@ -23,8 +23,11 @@ export function FinalCta() {
         </div>
         <div className="cta-heading-wrap" data-reveal>
           <div className="cta-heading-blur" />
-          <h2 className="glitch-text" data-text="Break free from big AI">
-            Break free from big AI
+          <h2
+            className="glitch-text"
+            data-text="Find the ruling, not the syntax"
+          >
+            Find the ruling, not the syntax
           </h2>
         </div>
         <div className="cta-btn-wrap" data-reveal>
@@ -32,7 +35,7 @@ export function FinalCta() {
             Request Early Access <ReturnArrow />
           </a>
         </div>
-        <p className="cta-fine-print">No credit card. No usage meter.</p>
+        <p className="cta-fine-print">No credit card. No search limits.</p>
       </div>
     </section>
   )
@@ -44,19 +47,19 @@ export function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div className="footer-brand">
-            <Link href="/" aria-label="Rig — Home">
+            <Link href="/" aria-label="Lex — Home">
               <Image
                 className="footer-logo"
                 src="/assets/brand/rig-wordmark.svg"
-                alt="Rig"
+                alt="Lex"
                 width={60}
                 height={22}
                 style={{ width: "auto" }}
               />
             </Link>
             <p>
-              Local-first AI for developers who refuse to be dependent on the
-              cloud.
+              The precedent engine for Indian law. Built for advocates who cite
+              for a living.
             </p>
           </div>
           <div className="footer-col">
@@ -95,12 +98,10 @@ export function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <span className="mono-label">
-            © 2026 Rig AI Inc. All rights reserved.
-          </span>
+          <span className="mono-label">© 2026 Lex. All rights reserved.</span>
           <div className="status footer-status">
             <span className="footer-status-dot" />
-            <span>All systems local</span>
+            <span>All systems operational</span>
           </div>
         </div>
       </div>

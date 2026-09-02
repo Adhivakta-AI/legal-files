@@ -6,10 +6,15 @@ backend/**/__pycache__/
 
 # server-side secrets
 backend/.env
+parcha/.env*
+!parcha/.env.example
 
 # local model/cache artifacts
 .cache/
 .pytest_cache/
+cloudflare/node_modules/
+cloudflare/.wrangler/
+backend/.cloudflare-ingest-checkpoint.json
 
 # local Codex/agent plugin cache
 .agents/

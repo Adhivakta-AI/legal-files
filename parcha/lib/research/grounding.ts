@@ -1,6 +1,6 @@
 import "server-only"
 
-import { GeminiRequestError, streamJson } from "./gemini"
+import { GeminiRequestError, generateJson } from "./gemini"
 import type {
   Citation,
   JudgmentContext,
@@ -24,24 +24,9 @@ const ANSWER_SCHEMA: Record<string, unknown> = {
         properties: {
           judgment_id: { type: "string" },
           chunk_id: { type: "string" },
-          case_name: { type: "string" },
-          citation: { type: "string" },
-          court: { type: "string" },
-          paragraph_number: { type: "string" },
-          pdf_url: { type: "string" },
-          pdf_page: { type: "integer" },
           relevance_note: { type: "string" },
         },
-        required: [
-          "judgment_id",
-          "chunk_id",
-          "case_name",
-          "citation",
-          "court",
-          "pdf_url",
-          "pdf_page",
-          "relevance_note",
-        ],
+        required: ["judgment_id", "chunk_id", "relevance_note"],
       },
     },
     statutes_referenced: {
@@ -63,8 +48,10 @@ Hard grounding rules:
 - Do not claim that a source establishes more than its excerpt supports. Distinguish holdings from observations and factual background.
 - For every cited judgment, explain specifically why it is relevant to the user's resolved query. Identify the proposition, factual analogy, distinction, or procedural principle supported by its indexed text.
 - Each citations entry must name the exact supporting chunk_id that best supports its relevance_note. Use only a supplied chunk_id belonging to that judgment.
+- Never write generic relevance notes such as "review this passage", "potentially relevant", or "see the judgment". State the concrete connection to the query and remain within the selected chunk's text.
 - If the excerpts are insufficient, say exactly what cannot be established and set confidence to low. Never fill gaps from memory.
 - The citations array must contain one entry for every judgment_id used inline. Metadata will be verified by the server.
+- Begin directly with the supported analysis. Do not add an uncited preface, methodology note, or generic disclaimer.
 - Write for an Indian legal professional: direct, structured, careful, and useful. This is research assistance, not a substitute for advice from counsel.
 
 Return only the requested JSON object.`
@@ -102,22 +89,94 @@ function sourceBlock(chunks: SearchChunk[]): string {
     .join("\n\n--- NEXT SOURCE ---\n\n")
 }
 
-function judgmentContextBlock(contexts: JudgmentContext[]): string {
-  if (!contexts.length) return "No additional indexed judgment text was available."
+const QUERY_STOP_WORDS = new Set([
+  "about",
+  "against",
+  "act",
+  "and",
+  "are",
+  "case",
+  "cases",
+  "court",
+  "find",
+  "for",
+  "from",
+  "give",
+  "india",
+  "indian",
+  "law",
+  "latest",
+  "legal",
+  "most",
+  "of",
+  "on",
+  "recent",
+  "show",
+  "supreme",
+  "the",
+  "under",
+  "what",
+  "when",
+  "where",
+  "which",
+  "with",
+])
+
+function queryTerms(query: string): string[] {
+  return [
+    ...new Set(
+      (query.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []).filter(
+        (term) => term.length > 2 && !QUERY_STOP_WORDS.has(term)
+      )
+    ),
+  ].slice(0, 16)
+}
+
+function passageScore(chunk: SearchChunk, terms: string[]): number {
+  const passage = chunk.chunk_text.toLocaleLowerCase()
+  const matches = terms.filter((term) => passage.includes(term)).length
+  const substantiveLength = Math.min(chunk.chunk_text.trim().length, 2400)
+  const thinPassagePenalty = substantiveLength < 120 ? 180 : 0
+  return matches * 100 + substantiveLength / 40 - thinPassagePenalty
+}
+
+function selectedContextChunks(
+  context: JudgmentContext,
+  query: string,
+  primaryChunks: SearchChunk[]
+): SearchChunk[] {
+  const terms = queryTerms(query)
+  const primaryIds = new Set(primaryChunks.map((chunk) => chunk.chunk_id))
+  return [...context.chunks]
+    .filter((chunk) => !primaryIds.has(chunk.chunk_id))
+    .sort(
+      (left, right) => passageScore(right, terms) - passageScore(left, terms)
+    )
+    .slice(0, 4)
+}
+
+function judgmentContextBlock(
+  contexts: JudgmentContext[],
+  query: string,
+  primaryChunks: SearchChunk[]
+): string {
+  if (!contexts.length)
+    return "No additional indexed judgment text was available."
   return contexts
     .map((context) => {
+      const selected = selectedContextChunks(context, query, primaryChunks)
       const header = JSON.stringify({
         judgment_id: context.judgment_id,
-        indexed_text_complete: !context.truncated,
-        included_characters: context.included_characters,
+        selected_query_focused_chunks: selected.length,
+        source_context_was_truncated: context.truncated,
       })
-      const text = context.chunks
+      const text = selected
         .map(
           (chunk) =>
-            `[CHUNK ${chunk.chunk_id} · PDF PAGE ${chunk.pdf_page} · PARA ${chunk.paragraph_number ?? "—"}]\n${chunk.chunk_text}`
+            `[CHUNK ${chunk.chunk_id} · PDF PAGE ${chunk.pdf_page} · PARA ${chunk.paragraph_number ?? "—"}]\n${chunk.chunk_text.slice(0, 4000)}`
         )
         .join("\n\n")
-      return `${header}\n${text}`
+      return `${header}\n${text || "No additional query-focused chunk selected."}`
     })
     .join("\n\n=== NEXT JUDGMENT ===\n\n")
 }
@@ -146,9 +205,11 @@ function buildPrompt({
     },
     null,
     2
-  )}\n\nALLOWED JUDGMENT IDS:\n${[...new Set(chunks.map((chunk) => chunk.judgment_id))].join(
+  )}\n\nALLOWED JUDGMENT IDS:\n${[
+    ...new Set(chunks.map((chunk) => chunk.judgment_id)),
+  ].join(
     "\n"
-  )}\n\nPRIMARY RETRIEVED PASSAGES:\n${sourceBlock(chunks)}\n\nINDEXED JUDGMENT TEXT:\n${judgmentContextBlock(judgmentContexts)}${
+  )}\n\nPRIMARY RETRIEVED PASSAGES:\n${sourceBlock(chunks)}\n\nQUERY-FOCUSED JUDGMENT TEXT:\n${judgmentContextBlock(judgmentContexts, query, chunks)}${
     correction ? `\n\nRETRY INSTRUCTION:\n${correction}` : ""
   }`
 }
@@ -157,18 +218,25 @@ function inlineIds(answer: string): string[] {
   return [...answer.matchAll(/\[\[([^\]]+)\]\]/g)].map((match) => match[1])
 }
 
-function validateGrounding(answer: string, chunks: SearchChunk[]): string | null {
+function validateGrounding(
+  answer: string,
+  chunks: SearchChunk[]
+): string | null {
   const allowed = new Set(chunks.map((chunk) => chunk.judgment_id))
   const cited = inlineIds(answer)
-  if (cited.length === 0) return "The answer contained no inline judgment citations."
+  if (cited.length === 0)
+    return "The answer contained no inline judgment citations."
   const invalid = cited.find((id) => !allowed.has(id))
-  if (invalid) return `The answer cited a judgment_id outside the retrieved allow-list: ${invalid}.`
+  if (invalid)
+    return `The answer cited a judgment_id outside the retrieved allow-list: ${invalid}.`
 
   const substantiveBlocks = answer
     .split(/\n{2,}/)
     .map((block) => block.trim())
     .filter((block) => block.replace(/[#*_>-]/g, "").trim().length >= 90)
-  const unsupported = substantiveBlocks.find((block) => inlineIds(block).length === 0)
+  const unsupported = substantiveBlocks.find(
+    (block) => inlineIds(block).length === 0
+  )
   if (unsupported) {
     return "At least one substantive paragraph lacked an inline [[judgment_id]] citation."
   }
@@ -177,14 +245,25 @@ function validateGrounding(answer: string, chunks: SearchChunk[]): string | null
 
 function citationsFrom(value: unknown): UntrustedCitation[] {
   return Array.isArray(value)
-    ? value.filter((item): item is UntrustedCitation => typeof item === "object" && item !== null)
+    ? value.filter(
+        (item): item is UntrustedCitation =>
+          typeof item === "object" && item !== null
+      )
     : []
+}
+
+function usableRelevanceNote(value: string | undefined): value is string {
+  if (!value || value.trim().length < 40) return false
+  return !/^(?:review|see|potentially relevant|retrieved (?:case|authority|passage))/i.test(
+    value.trim()
+  )
 }
 
 function groundAnswer(
   raw: UntrustedAnswer,
   chunks: SearchChunk[],
-  judgmentContexts: JudgmentContext[]
+  judgmentContexts: JudgmentContext[],
+  query: string
 ): ResearchAnswer {
   if (typeof raw.answer !== "string" || !raw.answer.trim()) {
     throw new Error("Gemini returned an empty answer")
@@ -195,18 +274,26 @@ function groundAnswer(
 
   const sourceByJudgment = new Map<string, SearchChunk>()
   chunks.forEach((chunk) => {
-    if (!sourceByJudgment.has(chunk.judgment_id)) sourceByJudgment.set(chunk.judgment_id, chunk)
+    if (!sourceByJudgment.has(chunk.judgment_id))
+      sourceByJudgment.set(chunk.judgment_id, chunk)
   })
   const sourceByChunk = new Map<string, SearchChunk>()
-  ;[...chunks, ...judgmentContexts.flatMap((context) => context.chunks)].forEach((chunk) => {
-    if (!sourceByChunk.has(chunk.chunk_id)) sourceByChunk.set(chunk.chunk_id, chunk)
+  ;[
+    ...chunks,
+    ...judgmentContexts.flatMap((context) => context.chunks),
+  ].forEach((chunk) => {
+    if (!sourceByChunk.has(chunk.chunk_id))
+      sourceByChunk.set(chunk.chunk_id, chunk)
   })
   const notes = new Map<string, string>()
   const supportingChunks = new Map<string, string>()
   citationsFrom(raw.citations).forEach((citation) => {
     if (typeof citation.judgment_id !== "string") return
     if (typeof citation.relevance_note !== "string") return
-    notes.set(citation.judgment_id, citation.relevance_note.trim().slice(0, 260))
+    notes.set(
+      citation.judgment_id,
+      citation.relevance_note.trim().slice(0, 260)
+    )
     if (typeof citation.chunk_id === "string") {
       supportingChunks.set(citation.judgment_id, citation.chunk_id)
     }
@@ -214,18 +301,26 @@ function groundAnswer(
 
   const citations: Citation[] = [...new Set(inlineIds(answer))].map((id) => {
     const primarySource = sourceByJudgment.get(id)
-    if (!primarySource) throw new Error(`Citation ${id} is not present in the retrieved sources`)
+    if (!primarySource)
+      throw new Error(`Citation ${id} is not present in the retrieved sources`)
     const requestedSource = sourceByChunk.get(supportingChunks.get(id) ?? "")
-    const source = requestedSource?.judgment_id === id ? requestedSource : primarySource
+    const source =
+      requestedSource?.judgment_id === id ? requestedSource : primarySource
+    const modelNote = notes.get(id)
     return {
       judgment_id: source.judgment_id,
       case_name: source.title,
       citation: source.citation ?? "Unreported",
       court: "Supreme Court of India",
-      ...(source.paragraph_number ? { paragraph_number: source.paragraph_number } : {}),
+      ...(source.paragraph_number
+        ? { paragraph_number: source.paragraph_number }
+        : {}),
       pdf_url: source.pdf_url,
       pdf_page: source.pdf_page,
-      relevance_note: notes.get(id) || "Retrieved passage supporting the cited proposition.",
+      relevance_note:
+        requestedSource?.judgment_id === id && usableRelevanceNote(modelNote)
+          ? modelNote
+          : relevanceReason(source, query),
       chunk_id: source.chunk_id,
       excerpt: source.chunk_text.trim().slice(0, 2400),
     }
@@ -244,10 +339,30 @@ function groundAnswer(
     citations,
     statutes_referenced: [...new Set(statutes)],
     confidence:
-      raw.confidence === "high" || raw.confidence === "medium" || raw.confidence === "low"
+      raw.confidence === "high" ||
+      raw.confidence === "medium" ||
+      raw.confidence === "low"
         ? raw.confidence
         : "low",
+    synthesis_status: "grounded",
   }
+}
+
+function relevanceReason(source: SearchChunk, query: string): string {
+  const passage = source.chunk_text.replace(/\s+/g, " ").trim()
+  const excerpt =
+    passage.length > 210 ? `${passage.slice(0, 207).trimEnd()}…` : passage
+  const matches = queryTerms(query).filter((term) =>
+    passage.toLocaleLowerCase().includes(term)
+  )
+  if (matches.length) {
+    return `This case is relevant because the indexed passage directly discusses ${matches
+      .slice(0, 4)
+      .join(
+        ", "
+      )}, matching the query's focus. The passage states: “${excerpt}”`
+  }
+  return `The hybrid legal index ranked this case for the query. The strongest available indexed passage states: “${excerpt}”`
 }
 
 async function generateAttempt({
@@ -267,28 +382,74 @@ async function generateAttempt({
   correction?: string
   signal?: AbortSignal
 }): Promise<ResearchAnswer> {
-  let json = ""
-
-  for await (const fragment of streamJson({
+  const raw = await generateJson<UntrustedAnswer>({
     systemInstruction: GENERATION_SYSTEM_PROMPT,
-    prompt: buildPrompt({ query, mode, analysis, chunks, judgmentContexts, correction }),
+    prompt: buildPrompt({
+      query,
+      mode,
+      analysis,
+      chunks,
+      judgmentContexts,
+      correction,
+    }),
     schema: ANSWER_SCHEMA,
     signal,
-  })) {
-    json += fragment
-  }
+    timeoutMs: 45_000,
+    maxOutputTokens: 4096,
+    temperature: 0.15,
+  })
 
-  return groundAnswer(JSON.parse(json) as UntrustedAnswer, chunks, judgmentContexts)
+  return groundAnswer(raw, chunks, judgmentContexts, query)
 }
 
-function citationSafeFallback(chunks: SearchChunk[]): ResearchAnswer {
-  const sources = [...new Map(chunks.map((chunk) => [chunk.judgment_id, chunk])).values()].slice(0, 5)
+function strongestSources(
+  query: string,
+  chunks: SearchChunk[],
+  judgmentContexts: JudgmentContext[]
+): SearchChunk[] {
+  const terms = queryTerms(query)
+  const contextChunks = judgmentContexts.flatMap((context) => context.chunks)
+  const judgmentIds = [...new Set(chunks.map((chunk) => chunk.judgment_id))]
+  return judgmentIds.slice(0, 5).flatMap((judgmentId) => {
+    const candidates = [...chunks, ...contextChunks].filter(
+      (chunk) => chunk.judgment_id === judgmentId
+    )
+    const strongest = candidates.sort(
+      (left, right) => passageScore(right, terms) - passageScore(left, terms)
+    )[0]
+    return strongest ? [strongest] : []
+  })
+}
+
+function fallbackExplanation(reason: string): string {
+  if (reason.includes("no inline judgment citations")) {
+    return "the draft did not attach verified source IDs to its legal propositions"
+  }
+  if (reason.includes("lacked an inline")) {
+    return "at least one legal proposition in the draft lacked a verified citation"
+  }
+  if (reason.includes("outside the retrieved allow-list")) {
+    return "the draft referred to an authority outside the retrieved source set"
+  }
+  if (reason.includes("JSON") || reason.includes("structured")) {
+    return "the model did not return a complete structured memorandum"
+  }
+  return "the draft did not pass the citation-grounding check"
+}
+
+function citationSafeFallback(
+  query: string,
+  chunks: SearchChunk[],
+  judgmentContexts: JudgmentContext[],
+  failureReason: string
+): ResearchAnswer {
+  const sources = strongestSources(query, chunks, judgmentContexts)
   const answer = [
-    "The generated synthesis did not pass the archive's citation check. The retrieved authorities below are provided for direct review without inferring any additional holding.",
+    `AI Pro withheld its generated draft because ${fallbackExplanation(failureReason)}. Lex instead extracted the strongest query-linked passage from each retrieved authority:`,
     sources
       .map(
-      (source) =>
-        `- **${source.title}**${source.citation ? ` (${source.citation})` : ""} — Review the retrieved passage and linked judgment PDF for its application to this query. [[${source.judgment_id}]]`
+        (source) =>
+          `- **${source.title}**${source.citation ? ` (${source.citation})` : ""} — ${relevanceReason(source, query)} [[${source.judgment_id}]]`
       )
       .join("\n"),
   ].join("\n\n")
@@ -300,15 +461,18 @@ function citationSafeFallback(chunks: SearchChunk[]): ResearchAnswer {
       case_name: source.title,
       citation: source.citation ?? "Unreported",
       court: "Supreme Court of India",
-      ...(source.paragraph_number ? { paragraph_number: source.paragraph_number } : {}),
+      ...(source.paragraph_number
+        ? { paragraph_number: source.paragraph_number }
+        : {}),
       pdf_url: source.pdf_url,
       pdf_page: source.pdf_page,
-      relevance_note: "Retrieved authority requiring direct review after synthesis validation failed.",
+      relevance_note: relevanceReason(source, query),
       chunk_id: source.chunk_id,
       excerpt: source.chunk_text.trim().slice(0, 2400),
     })),
     statutes_referenced: [],
     confidence: "low",
+    synthesis_status: "retrieval_only",
   }
 }
 
@@ -319,7 +483,7 @@ export async function generateGroundedAnswer({
   chunks,
   judgmentContexts,
   signal,
-  onRetry,
+  onValidationFailure,
 }: {
   query: string
   mode: ResearchMode
@@ -327,9 +491,10 @@ export async function generateGroundedAnswer({
   chunks: SearchChunk[]
   judgmentContexts: JudgmentContext[]
   signal?: AbortSignal
-  onRetry: (reason: string) => void
+  onValidationFailure: (reason: string, attempt: number, final: boolean) => void
 }): Promise<ResearchAnswer> {
   let correction: string | undefined
+  let failureReason = "Grounding validation failed"
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
@@ -343,15 +508,27 @@ export async function generateGroundedAnswer({
         signal,
       })
     } catch (error) {
-      if (error instanceof GeminiRequestError || (error instanceof DOMException && error.name === "AbortError")) {
+      if (
+        error instanceof GeminiRequestError ||
+        (error instanceof DOMException && error.name === "AbortError")
+      ) {
         throw error
       }
-      const reason = error instanceof Error ? error.message : "Grounding validation failed"
-      if (attempt === 2) return citationSafeFallback(chunks)
-      onRetry(reason)
+      const reason =
+        error instanceof Error ? error.message : "Grounding validation failed"
+      failureReason = reason
+      const final = attempt === 2
+      onValidationFailure(reason, attempt + 1, final)
+      if (final)
+        return citationSafeFallback(
+          query,
+          chunks,
+          judgmentContexts,
+          failureReason
+        )
       correction = `${reason} Start a new draft. Before returning JSON, inspect every paragraph and every bullet of 90 or more characters and place at least one allowed [[judgment_id]] marker inside that same block. Do not leave introductory summaries or conclusions uncited when they contain a legal proposition.`
     }
   }
 
-  return citationSafeFallback(chunks)
+  return citationSafeFallback(query, chunks, judgmentContexts, failureReason)
 }

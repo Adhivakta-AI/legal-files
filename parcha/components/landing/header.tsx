@@ -75,7 +75,9 @@ export function Header() {
             <Link
               href="/research"
               className="btn-chamfer site-nav-cta btn-dark"
-              onClick={() => setOpen(false)}
+              onClick={() => { 
+                
+              }}
             >
               Open Lex
             </Link>

@@ -259,3 +259,51 @@ Do not delete a batch merely because `COMPLETE.json` exists. First upload its
 finalized output and checksums to private object storage, verify the upload,
 generate embeddings, ingest Supabase, and verify database counts and sampled
 PDF citations.
+
+## Archive finished batches to R2
+
+Once a batch's `completion/COMPLETE.json` exists, archive its finalized
+output to a private Cloudflare R2 bucket so it can be embedded and ingested
+from another machine. Only the finalized output travels — `manifest.jsonl`,
+`extraction/summary.json`, `final/documents/*.json.gz`, `final/chunks.jsonl.gz`,
+`final/summary.json`, and `completion/`. Raw PDFs, embedded-text extraction,
+and intermediate Tesseract/Paddle results stay local; they are reproducible
+from the manifest and are not archived.
+
+Create the bucket and a scoped API token once, in the Cloudflare dashboard:
+
+1. R2 Object Storage -> Create bucket, e.g. `judgment-ocr-corpus`. Note the
+   account ID shown on the R2 overview page.
+2. R2 -> Manage API tokens -> Create API token. Scope it to "Object Read &
+   Write" on that one bucket only, not account-wide.
+3. Register the resulting Access Key ID / Secret Access Key locally as a
+   named profile so they never sit in a plaintext `.env` file:
+
+   ```bash
+   aws configure --profile r2
+   # AWS Access Key ID / Secret Access Key: paste the R2 token values
+   # Default region name: auto
+   # Default output format: json
+   ```
+
+On the machine holding the finished batch, set `R2_ACCOUNT_ID`, `R2_BUCKET`,
+and `AWS_PROFILE` in `.env` (see `.env.example`), then:
+
+```bash
+./upload-batch-to-r2.sh
+```
+
+It refuses to run if `completion/COMPLETE.json` is missing. `BATCH_ID`
+defaults to the `BATCH_DIR` basename (e.g. `batch-01`) and can be overridden.
+
+On the machine that will run embeddings, set the same `R2_*` variables plus
+`R2_DOWNLOAD_ROOT`, then:
+
+```bash
+./download-batch-from-r2.sh            # lists archived batches
+./download-batch-from-r2.sh batch-01   # downloads and verifies checksums
+```
+
+Then generate embeddings for the downloaded chunks, as in "Finalize the 500
+judgments" above, pointing `--chunks` at
+`$R2_DOWNLOAD_ROOT/batch-01/final/chunks.jsonl.gz`.

@@ -1,17 +1,12 @@
-export type ResearchMode = "research" | "explain" | "draft"
+export type ResearchMode = "search" | "ai_pro"
+
+export type SynthesisStatus = "not_requested" | "grounded" | "retrieval_only"
 
 export type LegalIntent =
-  | "case_law_lookup"
-  | "statute_lookup"
-  | "doctrine_explanation"
-  | "drafting"
+  "case_law_lookup" | "statute_lookup" | "doctrine_explanation" | "drafting"
 
 export type PipelineStage =
-  | "spelling"
-  | "acronyms"
-  | "context"
-  | "retrieval"
-  | "generation"
+  "spelling" | "acronyms" | "context" | "retrieval" | "generation"
 
 export type StageStatus = "queued" | "running" | "complete" | "error"
 
@@ -30,7 +25,7 @@ export interface QueryAnalysis {
   original_query: string
   corrected_query: string
   enriched_query: string
-  relationship: "follow_up" | "new_topic"
+  query_valid: boolean
   retrieval_order: "relevance" | "recent"
   case_name_query: string | null
   corrections: QueryCorrection[]
@@ -85,9 +80,12 @@ export interface ResearchAnswer {
   citations: Citation[]
   statutes_referenced: string[]
   confidence: "high" | "medium" | "low"
+  synthesis_status: SynthesisStatus
 }
 
 export interface ResearchResult extends ResearchAnswer {
+  mode: ResearchMode
+  synthesis_status: SynthesisStatus
   analysis: QueryAnalysis
   retrieval: {
     query: string
@@ -116,23 +114,16 @@ export type ResearchStreamEvent =
     }
   | { type: "answer_delta"; delta: string }
   | { type: "result"; result: ResearchResult }
-  | { type: "error"; stage?: PipelineStage; message: string; retryable: boolean }
+  | {
+      type: "error"
+      stage?: PipelineStage
+      message: string
+      retryable: boolean
+    }
 
 export interface ResearchRequest {
   query: string
   mode: ResearchMode
   year_from?: number
   year_to?: number
-  conversation?: ResearchConversationContext
-}
-
-export interface ResearchConversationContext {
-  previous_query: string
-  previous_resolved_query: string
-  previous_legal_context: string[]
-  previous_citations: Array<{
-    judgment_id: string
-    case_name: string
-    citation: string
-  }>
 }

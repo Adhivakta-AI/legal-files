@@ -8,13 +8,26 @@ Production flow:
 
 `Browser → OpenNext app Worker → Gemini + search Worker → D1 / Vectorize / R2`
 
-Research requests support conversational follow-ups. The analyzer decides
-whether a new message refines the previous result or begins a new topic and
-turns follow-ups into standalone retrieval queries. After passage retrieval,
-the app requests bounded indexed text for the top five judgments and asks the
-model for a query-specific relevance explanation tied to an exact supporting
-chunk. Exceptionally long judgments are marked as truncated rather than being
+Every submission is an independent research request; previous results are not
+sent back as conversational context. After passage retrieval, AI Pro requests
+bounded indexed text for the top five judgments and asks the model for a
+query-specific relevance explanation tied to an exact supporting chunk.
+Exceptionally long judgments are marked as truncated rather than being
 represented as completely read.
+
+The research composer has two modes:
+
+- **Search** performs conservative spelling correction and sends the corrected
+  query directly to the Cloudflare search Worker. It returns ranked cases and
+  indexed passages without generating an AI memorandum.
+- **AI Pro** adds query analysis, bounded judgment-context retrieval, and a
+  citation-checked Gemini synthesis with query-specific relevance notes.
+
+The active application and search path do not use Supabase. Application auth
+is stored in Cloudflare D1; judgment metadata and full-text indexes are in D1,
+embeddings are searched with Vectorize and Workers AI, and PDFs are stored in
+R2. The repository's legacy `backend/` PostgreSQL code is not called by this
+application.
 
 ## Authentication
 

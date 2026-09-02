@@ -36,9 +36,9 @@ export function EarlyAccess() {
     >
       <MeasuredShader
         wrapClassName="shader-wrap"
-        surfaceClassName="early-shader-surface"
         targetSelector=".ea-headline-wrap"
         extraPad={40}
+        canvasId="shader4"
       />
       <div className="ea-container container">
         <div className="ea-content" data-reveal>

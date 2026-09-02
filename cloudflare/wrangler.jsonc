@@ -26,6 +26,6 @@
     "SEMANTIC_CANDIDATES": "80",
     "KEYWORD_CANDIDATES": "80",
     "RRF_K": "60",
-    "CORS_ORIGIN": "*"
+    "CORS_ORIGIN": "https://lex-archives-app.politestranger18.workers.dev"
   }
 }

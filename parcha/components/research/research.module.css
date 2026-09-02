@@ -56,7 +56,14 @@
   font-size: 0.7rem;
   font-weight: 800;
   text-decoration: none;
-  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  clip-path: polygon(
+    6px 0,
+    100% 0,
+    100% calc(100% - 6px),
+    calc(100% - 6px) 100%,
+    0 100%,
+    0 6px
+  );
 }
 
 .brand > div {
@@ -201,8 +208,13 @@
   text-overflow: ellipsis;
 }
 
-.accountIdentity strong { font-size: 0.76rem; }
-.accountIdentity span { color: var(--paper-40); font-size: 0.67rem; }
+.accountIdentity strong {
+  font-size: 0.76rem;
+}
+.accountIdentity span {
+  color: var(--paper-40);
+  font-size: 0.67rem;
+}
 
 .accountPopover > a,
 .accountPopover > button {
@@ -226,8 +238,13 @@
   background: var(--panel-strong);
 }
 
-.accountPopover > button:last-child { color: #ffaaa0; }
-.accountPopover > button:disabled { opacity: 0.5; cursor: wait; }
+.accountPopover > button:last-child {
+  color: #ffaaa0;
+}
+.accountPopover > button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
 
 .shell {
   width: 100%;
@@ -275,8 +292,17 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 160ms ease, transform 160ms ease;
-  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
+  clip-path: polygon(
+    8px 0,
+    100% 0,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    0 100%,
+    0 8px
+  );
 }
 
 .newResearchButton:hover {
@@ -408,33 +434,6 @@
   padding: clamp(2rem, 6vw, 5.5rem);
 }
 
-.composerSection[data-compact="true"] {
-  min-height: auto;
-  flex: 0 0 auto;
-  order: 2;
-  justify-content: flex-start;
-  padding: 0.8rem clamp(1rem, 3vw, 2rem);
-  background: rgba(7, 7, 7, 0.96);
-  border-top: 1px solid var(--line);
-  box-shadow: 0 -18px 40px rgba(0, 0, 0, 0.28);
-}
-
-.composerSection[data-compact="true"] .composer {
-  margin: 0 auto;
-}
-
-.composerSection[data-compact="true"] .composer textarea {
-  min-height: 58px;
-  max-height: 120px;
-  resize: none;
-  padding: 0.8rem 1rem;
-  font-size: 0.9rem;
-}
-
-.composerSection[data-compact="true"] .composerToolbar {
-  min-height: 48px;
-}
-
 .intro {
   width: 100%;
   max-width: 900px;
@@ -473,7 +472,14 @@
   border: 1px solid var(--paper-20);
   background: #0c0c0c;
   transition: border-color 160ms ease;
-  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  clip-path: polygon(
+    12px 0,
+    100% 0,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0 100%,
+    0 12px
+  );
 }
 
 .composer:focus-within {
@@ -511,32 +517,165 @@
   border-top: 1px solid var(--line-soft);
 }
 
-.modeSelector {
-  height: 40px;
+.modeSelectTrigger {
+  height: 42px;
+  min-width: 168px;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0 0.65rem;
-  color: var(--paper-60);
-  background: var(--panel-strong);
-  border: 1px solid var(--line-soft);
+  gap: 0.55rem;
+  padding: 0.3rem 0.5rem 0.3rem 0.35rem;
+  color: var(--paper-70);
+  background: rgba(240, 237, 230, 0.035);
+  border: 1px solid var(--paper-15);
+  outline: 0;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease;
 }
 
-.modeSelector select {
-  max-width: 138px;
-  color: inherit;
-  background: transparent;
-  border: 0;
-  outline: 0;
+.modeSelectTrigger:hover,
+.modeSelectTrigger[data-pressed] {
+  color: var(--paper);
+  background: rgba(240, 237, 230, 0.06);
+  border-color: rgb(from var(--accent) r g b / 55%);
+}
+
+.modeSelectTrigger:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgb(from var(--accent) r g b / 18%);
+}
+
+.modeSelectTrigger[data-disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.modeSelectTriggerIcon,
+.modeSelectItemIcon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--accent-light);
+  background: rgb(from var(--accent) r g b / 12%);
+  border: 1px solid rgb(from var(--accent) r g b / 24%);
+}
+
+.modeSelectTriggerIcon {
+  width: 28px;
+  height: 28px;
+}
+
+.modeSelectValue {
+  min-width: 0;
+  overflow: hidden;
   font-family: "Chivo Mono", monospace;
   font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  appearance: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.modeSelector option {
+.modeSelectChevron {
+  display: grid;
+  place-items: center;
+  margin-left: auto;
+  color: var(--paper-35);
+  transition: transform 140ms ease;
+}
+
+.modeSelectTrigger[data-pressed] .modeSelectChevron {
+  transform: rotate(180deg);
+}
+
+.modeSelectPositioner {
+  z-index: 100;
+  outline: 0;
+}
+
+.modeSelectPopup {
+  width: max(var(--anchor-width), 310px);
+  max-width: calc(100vw - 1.5rem);
   color: var(--paper);
-  background: var(--ink);
+  background: #101010;
+  border: 1px solid var(--paper-15);
+  outline: 0;
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.58);
+  transform-origin: var(--transform-origin);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.modeSelectPopup[data-starting-style],
+.modeSelectPopup[data-ending-style] {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+}
+
+.modeSelectList {
+  padding: 0.35rem;
+  outline: 0;
+}
+
+.modeSelectItem {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 58px;
+  padding: 0.55rem 0.65rem;
+  color: var(--paper-60);
+  border: 1px solid transparent;
+  outline: 0;
+  cursor: default;
+  user-select: none;
+}
+
+.modeSelectItem[data-highlighted] {
+  color: var(--paper);
+  background: rgba(240, 237, 230, 0.05);
+  border-color: var(--line-soft);
+}
+
+.modeSelectItem[data-selected] {
+  color: var(--paper);
+  background: rgb(from var(--accent) r g b / 8%);
+}
+
+.modeSelectItemIcon {
+  width: 34px;
+  height: 34px;
+}
+
+.modeSelectItemText {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.modeSelectItemText strong {
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.modeSelectItemText small {
+  overflow: hidden;
+  color: var(--paper-35);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.modeSelectIndicator {
+  display: grid;
+  place-items: center;
+  color: var(--accent-light);
 }
 
 .shortcut,
@@ -825,6 +964,12 @@
   margin-top: 4rem;
   padding-top: 2.5rem;
   border-top: 1px solid var(--line);
+}
+
+.citationsSection[data-mode="search"] {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
 }
 
 .citationsHeading > span {
@@ -1175,22 +1320,6 @@
   line-height: 1.55;
 }
 
-.contextBadge {
-  display: inline-flex;
-  margin: 0.85rem 0 0;
-  padding: 0.25rem 0.4rem;
-  color: var(--paper-40);
-  border: 1px solid var(--line-soft);
-  font-family: "Chivo Mono", monospace;
-  font-size: 0.56rem;
-  letter-spacing: 0.06em;
-}
-
-.contextBadge[data-follow-up="true"] {
-  color: var(--accent-light);
-  border-color: rgb(from var(--accent) r g b / 40%);
-}
-
 .titleLookup {
   display: flex;
   flex-direction: column;
@@ -1344,7 +1473,14 @@
   flex-direction: column;
   background: #111;
   border: 1px solid var(--paper-20);
-  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  clip-path: polygon(
+    12px 0,
+    100% 0,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0 100%,
+    0 12px
+  );
 }
 
 .pdfToolbar {
@@ -1413,8 +1549,7 @@
   flex: 1;
   padding: 1rem;
   background:
-    linear-gradient(rgba(240, 237, 230, 0.025) 1px, transparent 1px),
-    #080808;
+    linear-gradient(rgba(240, 237, 230, 0.025) 1px, transparent 1px), #080808;
   background-size: 100% 32px;
 }
 
@@ -1426,11 +1561,15 @@
 }
 
 @keyframes pulse {
-  50% { opacity: 0.25; }
+  50% {
+    opacity: 0.25;
+  }
 }
 
 @keyframes nudge {
-  50% { transform: translateX(2px); }
+  50% {
+    transform: translateX(2px);
+  }
 }
 
 @media (max-width: 1180px) {
@@ -1599,32 +1738,16 @@
     padding: 2rem 1rem;
   }
 
-  .composerSection[data-compact="true"] {
-    min-height: auto;
-    padding: 0.65rem;
-  }
-
   .composer textarea {
     min-height: 130px;
     padding: 1.1rem;
-  }
-
-  .composerSection[data-compact="true"] .composer textarea {
-    min-height: 54px;
-    max-height: 92px;
-    padding: 0.7rem 0.85rem;
   }
 
   .composerToolbar {
     flex-wrap: wrap;
   }
 
-  .modeSelector {
-    flex: 1;
-  }
-
-  .modeSelector select {
-    max-width: none;
+  .modeSelectTrigger {
     flex: 1;
   }
 
@@ -1715,7 +1838,7 @@
     gap: 0.5rem;
   }
 
-  .modeSelector,
+  .modeSelectTrigger,
   .submitButton {
     width: 100%;
     min-width: 0;

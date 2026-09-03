@@ -1,0 +1,339 @@
+.header {
+  flex: 0 0 72px;
+  height: 72px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: stretch;
+  color: var(--paper);
+  background: color-mix(in srgb, var(--ink) 94%, transparent);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+
+.brand {
+  width: 260px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0 1.25rem;
+  color: inherit;
+  border-right: 1px solid var(--line);
+  text-decoration: none;
+}
+
+.brandMark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--ink);
+  background: var(--accent);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.7rem;
+  font-weight: 800;
+  clip-path: polygon(
+    6px 0,
+    100% 0,
+    100% calc(100% - 6px),
+    calc(100% - 6px) 100%,
+    0 100%,
+    0 6px
+  );
+}
+
+.brandCopy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.brandCopy strong {
+  font-family: "Chalet", sans-serif;
+  font-size: 0.96rem;
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+}
+
+.brandCopy span {
+  overflow: hidden;
+  color: var(--paper-35);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.context {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0 1rem;
+  color: var(--paper-40);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.contextBadge {
+  padding: 0.32rem 0.48rem;
+  color: var(--accent-light);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.6rem;
+  border-left: 1px solid var(--line);
+}
+
+.navLink {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0 0.72rem;
+  color: var(--paper-50);
+  border: 1px solid transparent;
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.09em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.navLink:hover {
+  color: var(--paper);
+  background: var(--panel);
+}
+
+.navLink[data-active="true"] {
+  color: var(--paper);
+  border-color: var(--line);
+  background: var(--panel-strong);
+}
+
+.themeButton,
+.mobileAction {
+  align-self: center;
+  color: var(--paper-60) !important;
+  background: transparent !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+}
+
+.themeButton:hover,
+.mobileAction:hover {
+  color: var(--paper) !important;
+  background: var(--panel-strong) !important;
+}
+
+.themeButton {
+  margin-right: 0.65rem;
+}
+
+.mobileAction {
+  display: none !important;
+  margin-right: 0.65rem;
+}
+
+.accountMenu {
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border-left: 1px solid var(--line);
+}
+
+.accountTrigger {
+  min-width: 168px;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0 1rem;
+  color: var(--paper-70);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.accountTrigger:hover,
+.accountTrigger[aria-expanded="true"] {
+  color: var(--paper);
+  background: var(--panel-strong);
+}
+
+.accountAvatar {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--ink);
+  background: var(--accent);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.accountName {
+  min-width: 0;
+  max-width: 120px;
+  overflow: hidden;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.accountPopover {
+  width: 250px;
+  position: absolute;
+  top: calc(100% + 1px);
+  right: 0;
+  z-index: 60;
+  padding: 0.45rem;
+  color: var(--paper);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  box-shadow: 0 20px 48px color-mix(in srgb, var(--ink) 45%, transparent);
+}
+
+.accountIdentity {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.65rem 0.7rem 0.8rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.accountIdentity strong,
+.accountIdentity span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.accountIdentity strong {
+  font-size: 0.76rem;
+}
+.accountIdentity span {
+  color: var(--paper-40);
+  font-size: 0.67rem;
+}
+
+.accountPopover > a,
+.accountPopover > button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem;
+  color: var(--paper-60);
+  background: transparent;
+  border: 0;
+  font-size: 0.7rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.accountPopover > a:hover,
+.accountPopover > button:hover:not(:disabled) {
+  color: var(--paper);
+  background: var(--panel-strong);
+}
+
+.accountPopover > button:last-child {
+  color: #d94b45;
+}
+.accountPopover > button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+@media (max-width: 1180px) {
+  .brand {
+    width: 220px;
+  }
+  .context {
+    display: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .header {
+    flex-basis: 64px;
+    height: 64px;
+  }
+  .brand {
+    width: auto;
+    flex: 1;
+    padding: 0 0.8rem;
+    border-right: 0;
+  }
+  .brandCopy span {
+    display: none;
+  }
+  .nav {
+    margin-left: 0;
+    padding: 0 0.35rem;
+  }
+  .navLink {
+    width: 34px;
+    padding: 0;
+    justify-content: center;
+  }
+  .navLink span {
+    display: none;
+  }
+  .themeButton {
+    margin-right: 0.35rem;
+  }
+  .mobileAction {
+    display: inline-flex !important;
+    margin-right: 0.35rem;
+  }
+  .accountTrigger {
+    min-width: auto;
+    padding: 0 0.7rem;
+  }
+  .accountName,
+  .accountTrigger > svg {
+    display: none;
+  }
+}
+
+@media (max-width: 540px) {
+  .brand {
+    flex: 0 0 auto;
+  }
+  .brandCopy {
+    display: none;
+  }
+  .nav {
+    flex: 1;
+    justify-content: center;
+    border-left: 0;
+  }
+  .themeButton {
+    margin-right: 0.25rem;
+  }
+  .mobileAction {
+    margin-right: 0.25rem;
+  }
+  .accountTrigger {
+    padding: 0 0.45rem;
+  }
+}

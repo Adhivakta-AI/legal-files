@@ -35,6 +35,13 @@ function normalizedRequest(value: unknown): ResearchRequest {
     throw new Error("query must be between 3 and 3000 characters")
   }
   const mode: ResearchMode = body.mode === "search" ? "search" : "ai_pro"
+  const limit =
+    typeof body.limit === "number" &&
+    Number.isInteger(body.limit) &&
+    body.limit >= 1 &&
+    body.limit <= 50
+      ? body.limit
+      : undefined
 
   const year = (candidate: unknown, name: string) => {
     if (candidate === undefined) return undefined
@@ -56,6 +63,7 @@ function normalizedRequest(value: unknown): ResearchRequest {
   return {
     query,
     mode,
+    ...(limit ? { limit } : {}),
     ...(yearFrom ? { year_from: yearFrom } : {}),
     ...(yearTo ? { year_to: yearTo } : {}),
   }
@@ -250,6 +258,8 @@ export async function POST(request: Request): Promise<Response> {
           const { chunks, widened } = await retrieveChunks({
             query: analysis.enriched_query,
             originalQuery: analysis.corrected_query,
+            limit: input.limit ?? (input.mode === "search" ? 40 : 14),
+            maxPerJudgment: input.mode === "search" ? 1 : 2,
             yearFrom: input.year_from,
             yearTo: input.year_to,
             order: analysis.retrieval_order,

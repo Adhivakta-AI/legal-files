@@ -32,10 +32,13 @@ export async function generateMetadata({
 
 export default async function JudgmentPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ page?: string }>
 }) {
   const { id } = await params
+  const { page } = await searchParams
   const session = await getAuth().api.getSession({ headers: await headers() })
   if (!session) {
     redirect(`/sign-in?callbackURL=/browse/${encodeURIComponent(id)}`)
@@ -44,5 +47,12 @@ export default async function JudgmentPage({
   const judgment = await fetchJudgment(decodeURIComponent(id))
   if (!judgment) notFound()
 
-  return <JudgmentReader judgment={judgment} />
+  const initialPdfPage = Number.parseInt(page ?? "", 10)
+
+  return (
+    <JudgmentReader
+      judgment={judgment}
+      initialPdfPage={Number.isFinite(initialPdfPage) ? initialPdfPage : null}
+    />
+  )
 }

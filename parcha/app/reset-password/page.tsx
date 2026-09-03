@@ -4,7 +4,9 @@ import Link from "next/link"
 import { ResetPasswordForm } from "@/components/auth/auth-forms"
 import { AuthShell } from "@/components/auth/auth-shell"
 
-export const metadata: Metadata = { title: "Choose a new password — Lex Archives" }
+export const metadata: Metadata = {
+  title: "Choose a new password — Lex Archives",
+}
 
 export default async function ResetPasswordPage({
   searchParams,
@@ -23,4 +25,3 @@ export default async function ResetPasswordPage({
     </AuthShell>
   )
 }
-

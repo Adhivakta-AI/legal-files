@@ -1,7 +1,7 @@
 import { create } from "zustand"
+import { toast } from "sonner"
 
 import type {
-  Citation,
   QueryAnalysis,
   ResearchMode,
   ResearchResult,
@@ -27,8 +27,8 @@ interface ResearchState {
   error: string
   running: boolean
   hasSubmitted: boolean
-  pdfCitation: Citation | null
   expandedCitationId: string | null
+  citationPage: number
 }
 
 interface ResearchActions {
@@ -36,8 +36,7 @@ interface ResearchActions {
   setMode: (mode: ResearchMode) => void
   toggleCitation: (judgmentId: string) => void
   setExpandedCitation: (judgmentId: string | null) => void
-  openPdf: (citation: Citation) => void
-  closePdf: () => void
+  setCitationPage: (page: number) => void
   /** Runs the query currently in state against /api/research. */
   submit: () => Promise<void>
   /** Loads a stored session back into the workspace. */
@@ -65,8 +64,8 @@ const idleState: ResearchState = {
   error: "",
   running: false,
   hasSubmitted: false,
-  pdfCitation: null,
   expandedCitationId: null,
+  citationPage: 1,
 }
 
 export const useResearchStore = create<ResearchState & ResearchActions>(
@@ -86,9 +85,11 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
     setExpandedCitation: (judgmentId) =>
       set({ expandedCitationId: judgmentId }),
 
-    openPdf: (citation) => set({ pdfCitation: citation }),
-
-    closePdf: () => set({ pdfCitation: null }),
+    setCitationPage: (page) =>
+      set({
+        citationPage: Math.max(1, Math.floor(page)),
+        expandedCitationId: null,
+      }),
 
     abort: () => {
       activeController?.abort()
@@ -109,6 +110,7 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
         running: false,
         hasSubmitted: false,
         expandedCitationId: null,
+        citationPage: 1,
       })
     },
 
@@ -126,6 +128,7 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
         running: false,
         hasSubmitted: true,
         expandedCitationId: null,
+        citationPage: 1,
         stages: restoredStages(),
       })
     },
@@ -138,6 +141,7 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
       activeController?.abort()
       const controller = new AbortController()
       activeController = controller
+      const toastId = "lex-research-run"
 
       set({
         running: true,
@@ -148,6 +152,14 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
         streamedAnswer: "",
         result: null,
         error: "",
+        citationPage: 1,
+      })
+      toast.loading(mode === "search" ? "Searching cases" : "Synthesizing", {
+        id: toastId,
+        description:
+          submittedQuery.length > 110
+            ? `${submittedQuery.slice(0, 107)}...`
+            : submittedQuery,
       })
 
       try {
@@ -186,13 +198,28 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
                   result: event.result,
                   streamedAnswer: event.result.answer,
                   query: "",
+                  citationPage: 1,
                 })
                 useHistoryStore
                   .getState()
                   .addResult(event.result, submittedQuery, mode)
+                toast.success(
+                  mode === "search" ? "Cases ready" : "Research ready",
+                  {
+                    id: toastId,
+                    description:
+                      mode === "search"
+                        ? `${event.result.citations.length} ranked authorities found`
+                        : `${event.result.citations.length} citations verified`,
+                  }
+                )
                 break
               case "error":
                 set({ error: event.message })
+                toast.error("Research failed", {
+                  id: toastId,
+                  description: event.message,
+                })
                 break
             }
           },
@@ -201,6 +228,13 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
         if ((caught as Error).name !== "AbortError") {
           set({
             error:
+              caught instanceof Error
+                ? caught.message
+                : "The research request failed",
+          })
+          toast.error("Research failed", {
+            id: toastId,
+            description:
               caught instanceof Error
                 ? caught.message
                 : "The research request failed",

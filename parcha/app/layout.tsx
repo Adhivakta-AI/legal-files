@@ -1,9 +1,12 @@
 import type { Metadata } from "next"
+import { ThemeProvider } from "@/components/theme-provider"
+import { ThemedToaster } from "@/components/themed-toaster"
 import "./globals.css"
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://lex-archives-app.politestranger18.workers.dev"
+    process.env.NEXT_PUBLIC_SITE_URL ??
+      "https://lex-archives-app.politestranger18.workers.dev"
   ),
   title: "Lex Archives — Indian Case-Law Research",
   description:
@@ -22,8 +25,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <ThemeProvider defaultTheme="dark">
+          {children}
+          <ThemedToaster />
+        </ThemeProvider>
+      </body>
     </html>
   )
 }

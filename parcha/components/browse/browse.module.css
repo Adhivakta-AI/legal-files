@@ -3,16 +3,46 @@
   --panel-strong: rgba(240, 237, 230, 0.05);
   --line: rgba(240, 237, 230, 0.13);
   --line-soft: rgba(240, 237, 230, 0.07);
+  --grid-line: rgba(240, 237, 230, 0.022);
+  --surface-soft: rgba(10, 10, 10, 0.35);
+  --surface-panel: rgba(10, 10, 10, 0.55);
+  --surface-raised: rgba(10, 10, 10, 0.9);
   width: 100%;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   color: var(--paper);
   background:
-    linear-gradient(rgba(240, 237, 230, 0.022) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(240, 237, 230, 0.022) 1px, transparent 1px),
-    var(--ink);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px), var(--ink);
   background-size: 72px 72px;
+}
+
+:global(.light) .root {
+  --ink: #f7f5ef;
+  --paper: #171714;
+  --paper-70: rgba(23, 23, 20, 0.7);
+  --paper-60: rgba(23, 23, 20, 0.6);
+  --paper-50: rgba(23, 23, 20, 0.5);
+  --paper-45: rgba(23, 23, 20, 0.45);
+  --paper-40: rgba(23, 23, 20, 0.4);
+  --paper-35: rgba(23, 23, 20, 0.35);
+  --paper-30: rgba(23, 23, 20, 0.3);
+  --paper-25: rgba(23, 23, 20, 0.25);
+  --paper-20: rgba(23, 23, 20, 0.2);
+  --paper-15: rgba(23, 23, 20, 0.15);
+  --paper-12: rgba(23, 23, 20, 0.12);
+  --paper-06: rgba(23, 23, 20, 0.06);
+  --paper-04: rgba(23, 23, 20, 0.04);
+  --paper-02: rgba(23, 23, 20, 0.02);
+  --panel: rgba(23, 23, 20, 0.025);
+  --panel-strong: rgba(23, 23, 20, 0.055);
+  --line: rgba(23, 23, 20, 0.16);
+  --line-soft: rgba(23, 23, 20, 0.09);
+  --grid-line: rgba(23, 23, 20, 0.045);
+  --surface-soft: rgba(247, 245, 239, 0.55);
+  --surface-panel: rgba(247, 245, 239, 0.78);
+  --surface-raised: rgba(247, 245, 239, 0.94);
 }
 
 .root button,
@@ -111,7 +141,7 @@
 /* ---------------------------------------------------------------- filter rail */
 .rail {
   border-right: 1px solid var(--line);
-  background: rgba(10, 10, 10, 0.55);
+  background: var(--surface-panel);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -287,7 +317,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  background: rgba(10, 10, 10, 0.35);
+  background: var(--surface-soft);
 }
 
 .resultsBar {
@@ -297,8 +327,8 @@
   padding: 0.85rem 1.25rem;
   border-bottom: 1px solid var(--line);
   position: sticky;
-  top: 64px;
-  background: rgba(10, 10, 10, 0.9);
+  top: 72px;
+  background: var(--surface-raised);
   backdrop-filter: blur(10px);
   z-index: 20;
 }
@@ -546,7 +576,7 @@
 
   .rail {
     position: fixed;
-    inset: 64px auto 0 0;
+    inset: 72px auto 0 0;
     width: min(340px, 88vw);
     z-index: 45;
     transform: translateX(-102%);
@@ -574,9 +604,23 @@
 
   .scrim {
     position: fixed;
-    inset: 64px 0 0 0;
+    inset: 72px 0 0 0;
     background: rgba(0, 0, 0, 0.55);
     border: 0;
     z-index: 44;
+  }
+}
+
+@media (max-width: 820px) {
+  .resultsBar {
+    top: 64px;
+  }
+
+  .rail {
+    inset: 64px auto 0 0;
+  }
+
+  .scrim {
+    inset: 64px 0 0 0;
   }
 }

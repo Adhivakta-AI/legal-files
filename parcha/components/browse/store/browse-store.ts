@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { toast } from "sonner"
 
 import {
   DEFAULT_PAGE_SIZE,
@@ -140,12 +141,14 @@ export const useBrowseStore = create<BrowseState & BrowseActions>(
         })
       } catch (caught) {
         if ((caught as Error).name === "AbortError") return
+        const message =
+          caught instanceof Error ? caught.message : "The browse request failed"
         set({
           loading: false,
-          error:
-            caught instanceof Error
-              ? caught.message
-              : "The browse request failed",
+          error: message,
+        })
+        toast.error("Browse failed", {
+          description: message,
         })
       } finally {
         if (activeController === controller) activeController = null

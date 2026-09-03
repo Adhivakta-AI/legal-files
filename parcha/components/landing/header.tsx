@@ -2,12 +2,15 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { useGSAP } from "@gsap/react"
 import gsap from "gsap"
+import { useLandingUiStore } from "./store/landing-ui-store"
 
 export function Header() {
-  const [open, setOpen] = useState(false)
+  const open = useLandingUiStore((state) => state.mobileNavOpen)
+  const toggleOpen = useLandingUiStore((state) => state.toggleMobileNav)
+  const closeOpen = useLandingUiStore((state) => state.closeMobileNav)
   const navRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -54,7 +57,7 @@ export function Header() {
           aria-controls="nav-menu"
           aria-label="Toggle navigation"
           type="button"
-          onClick={() => setOpen((value) => !value)}
+          onClick={toggleOpen}
         >
           <span className="nav-toggle-bar" />
           <span className="nav-toggle-bar" />
@@ -62,12 +65,12 @@ export function Header() {
         </button>
         <ul className="site-nav-links" id="nav-menu" data-open={open}>
           <li>
-            <Link href="/blog" onClick={() => setOpen(false)}>
+            <Link href="/blog" onClick={closeOpen}>
               Blog
             </Link>
           </li>
           <li>
-            <Link href="/research" onClick={() => setOpen(false)}>
+            <Link href="/research" onClick={closeOpen}>
               Research
             </Link>
           </li>
@@ -75,9 +78,7 @@ export function Header() {
             <Link
               href="/research"
               className="btn-chamfer site-nav-cta btn-dark"
-              onClick={() => { 
-                
-              }}
+              onClick={closeOpen}
             >
               Open Lex
             </Link>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { Suspense } from "react"
 
 import {
   BrowseWorkspace,
@@ -69,17 +68,15 @@ export default async function BrowsePage({
   }
 
   return (
-    <Suspense fallback={null}>
-      <BrowseWorkspace
-        user={{
-          id: session.user.id,
-          name: session.user.name,
-          email: session.user.email,
-          emailVerified: session.user.emailVerified,
-          image: session.user.image,
-        }}
-        initialState={initialState}
-      />
-    </Suspense>
+    <BrowseWorkspace
+      user={{
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        emailVerified: session.user.emailVerified,
+        image: session.user.image,
+      }}
+      initialState={initialState}
+    />
   )
 }

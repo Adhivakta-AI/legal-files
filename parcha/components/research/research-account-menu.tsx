@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { authClient } from "@/lib/auth-client"
 
-import styles from "./research.module.css"
+import styles from "../app-navbar.module.css"
 
 export interface ResearchUser {
   id: string
@@ -40,12 +40,13 @@ export function ResearchAccountMenu({ user }: { user: ResearchUser }) {
     router.refresh()
   }
 
-  const initials = user.name
-    .split(/\s+/)
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "LA"
+  const initials =
+    user.name
+      .split(/\s+/)
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "LA"
 
   return (
     <div className={styles.accountMenu} ref={menuRef}>
@@ -66,12 +67,27 @@ export function ResearchAccountMenu({ user }: { user: ResearchUser }) {
             <strong>{user.name}</strong>
             <span>{user.email}</span>
           </div>
-          <Link href="/account" role="menuitem"><UserRound size={14} /> Account</Link>
-          <button type="button" role="menuitem" disabled={busy} onClick={() => void leave(false)}><LogOut size={14} /> Sign out</button>
-          <button type="button" role="menuitem" disabled={busy} onClick={() => void leave(true)}><MonitorX size={14} /> Sign out all sessions</button>
+          <Link href="/account" role="menuitem">
+            <UserRound size={14} /> Account
+          </Link>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={busy}
+            onClick={() => void leave(false)}
+          >
+            <LogOut size={14} /> Sign out
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={busy}
+            onClick={() => void leave(true)}
+          >
+            <MonitorX size={14} /> Sign out all sessions
+          </button>
         </div>
       ) : null}
     </div>
   )
 }
-

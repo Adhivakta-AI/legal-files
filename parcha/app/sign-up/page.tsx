@@ -14,7 +14,11 @@ export default function SignUpPage() {
       eyebrow="Public registration"
       title="Create your account."
       description="Verify your email before entering the research workspace."
-      footer={<>Already have an account? <Link href="/sign-in">Sign in</Link></>}
+      footer={
+        <>
+          Already have an account? <Link href="/sign-in">Sign in</Link>
+        </>
+      }
     >
       <SignUpForm googleEnabled={isGoogleAuthConfigured()} />
     </AuthShell>

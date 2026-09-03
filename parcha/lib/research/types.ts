@@ -124,6 +124,7 @@ export type ResearchStreamEvent =
 export interface ResearchRequest {
   query: string
   mode: ResearchMode
+  limit?: number
   year_from?: number
   year_to?: number
 }

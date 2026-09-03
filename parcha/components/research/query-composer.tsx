@@ -3,14 +3,15 @@
 import { ArrowRight } from "lucide-react"
 import type { FormEvent, KeyboardEvent } from "react"
 
+import type { ResearchMode } from "@/lib/research/types"
+
 import { EXAMPLES } from "./lib/research-modes"
-import { ModeSelect } from "./mode-select"
+import { ResearchModeIcon } from "./mode-select"
 import styles from "./research.module.css"
 import { useResearchStore } from "./store/research-store"
 
-export function QueryComposer() {
+export function QueryComposer({ mode }: { mode: ResearchMode }) {
   const query = useResearchStore((state) => state.query)
-  const mode = useResearchStore((state) => state.mode)
   const running = useResearchStore((state) => state.running)
   const setQuery = useResearchStore((state) => state.setQuery)
   const submit = useResearchStore((state) => state.submit)
@@ -45,7 +46,15 @@ export function QueryComposer() {
           disabled={running}
         />
         <div className={styles.composerToolbar}>
-          <ModeSelect />
+          <div
+            className={styles.modeBadge}
+            aria-label={mode === "search" ? "Search mode" : "AI Pro mode"}
+          >
+            <span className={styles.modeSelectTriggerIcon}>
+              <ResearchModeIcon mode={mode} />
+            </span>
+            {mode === "search" ? "Search" : "AI Pro"}
+          </div>
           <span className={styles.shortcut}>⌘ ENTER</span>
           <span className={styles.charCount}>{query.length}/3000</span>
           <button

@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react"
 
 import type { Citation } from "@/lib/research/types"
 
+import { ResearchRunSkeleton } from "../loading/page-skeletons"
 import { AnswerText } from "./answer-text"
 import { CitationList } from "./citation-list"
 import styles from "./research.module.css"
@@ -100,6 +101,8 @@ export function AnswerPanel() {
           streaming={running && !result}
           onCitation={focusCitation}
         />
+      ) : running && !result ? (
+        <ResearchRunSkeleton />
       ) : !result ? (
         <div className={styles.answerWaiting}>
           <span className={styles.streamCursor} />

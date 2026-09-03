@@ -21,9 +21,18 @@ export default async function AccountPage() {
       description="Review the identity attached to this research session."
     >
       <dl className={styles.accountDetails}>
-        <div><dt>Name</dt><dd>{session.user.name}</dd></div>
-        <div><dt>Verified email</dt><dd>{session.user.email}</dd></div>
-        <div><dt>User ID</dt><dd>{session.user.id}</dd></div>
+        <div>
+          <dt>Name</dt>
+          <dd>{session.user.name}</dd>
+        </div>
+        <div>
+          <dt>Verified email</dt>
+          <dd>{session.user.email}</dd>
+        </div>
+        <div>
+          <dt>User ID</dt>
+          <dd>{session.user.id}</dd>
+        </div>
       </dl>
       <AccountActions />
     </AuthShell>

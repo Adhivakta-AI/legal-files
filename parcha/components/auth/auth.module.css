@@ -18,67 +18,325 @@
   border-bottom: 1px solid rgba(240, 237, 230, 0.13);
 }
 
-.brand { display: flex; align-items: center; gap: 0.75rem; color: inherit; text-decoration: none; font-size: 0.82rem; letter-spacing: 0.08em; }
-.brand span { width: 32px; height: 32px; display: grid; place-items: center; color: #0a0a0a; background: #78aef8; font-family: "Chivo Mono", monospace; font-size: 0.65rem; font-weight: 800; }
-.homeLink { color: rgba(240, 237, 230, 0.55); font-family: "Chivo Mono", monospace; font-size: 0.65rem; text-decoration: none; text-transform: uppercase; letter-spacing: 0.08em; }
-.homeLink:hover { color: var(--auth-paper); }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+}
+.brand span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: #0a0a0a;
+  background: #78aef8;
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+.homeLink {
+  color: rgba(240, 237, 230, 0.55);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.65rem;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.homeLink:hover {
+  color: var(--auth-paper);
+}
 
-.stage { min-height: calc(100svh - 64px); display: grid; place-items: center; padding: 2rem 1rem 4rem; }
-.card { width: min(100%, 430px); padding: clamp(1.5rem, 4vw, 2.5rem); background: rgba(14, 17, 21, 0.94); border: 1px solid rgba(120, 174, 248, 0.42); box-shadow: 0 28px 80px rgba(0, 0, 0, 0.38); }
-.heading { margin-bottom: 1.75rem; }
-.heading > span { color: #8ebeff; font-family: "Chivo Mono", monospace; font-size: 0.61rem; letter-spacing: 0.13em; text-transform: uppercase; }
-.heading h1 { margin: 0.55rem 0 0.55rem; font-family: "Chalet", sans-serif; font-size: clamp(1.7rem, 5vw, 2.25rem); line-height: 1.06; letter-spacing: -0.035em; }
-.heading p { margin: 0; color: rgba(240, 237, 230, 0.55); font-size: 0.84rem; line-height: 1.55; }
+.stage {
+  min-height: calc(100svh - 64px);
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem 4rem;
+}
+.card {
+  width: min(100%, 430px);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  background: rgba(14, 17, 21, 0.94);
+  border: 1px solid rgba(120, 174, 248, 0.42);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.38);
+}
+.heading {
+  margin-bottom: 1.75rem;
+}
+.heading > span {
+  color: #8ebeff;
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.61rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.heading h1 {
+  margin: 0.55rem 0 0.55rem;
+  font-family: "Chalet", sans-serif;
+  font-size: clamp(1.7rem, 5vw, 2.25rem);
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+}
+.heading p {
+  margin: 0;
+  color: rgba(240, 237, 230, 0.55);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
 
-.form { display: grid; gap: 1rem; }
-.form label { display: grid; gap: 0.45rem; color: rgba(240, 237, 230, 0.72); font-family: "Chivo Mono", monospace; font-size: 0.64rem; letter-spacing: 0.06em; text-transform: uppercase; }
-.form input { width: 100%; height: 46px; padding: 0 0.85rem; color: var(--auth-paper); background: rgba(0, 0, 0, 0.28); border: 1px solid rgba(240, 237, 230, 0.17); border-radius: 0; font: 400 0.86rem "Instrument Sans", sans-serif; text-transform: none; outline: none; }
-.form input:focus { border-color: #78aef8; box-shadow: 0 0 0 1px #78aef8; }
-.form input:disabled { opacity: 0.45; }
-.form small { color: rgba(240, 237, 230, 0.34); font-size: 0.56rem; text-transform: none; }
-.labelRow { display: flex; justify-content: space-between; gap: 1rem; }
-.labelRow a { color: #8ebeff; text-decoration: none; text-transform: none; }
+.form {
+  display: grid;
+  gap: 1rem;
+}
+.form label {
+  display: grid;
+  gap: 0.45rem;
+  color: rgba(240, 237, 230, 0.72);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.form input {
+  width: 100%;
+  height: 46px;
+  padding: 0 0.85rem;
+  color: var(--auth-paper);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(240, 237, 230, 0.17);
+  border-radius: 0;
+  font:
+    400 0.86rem "Instrument Sans",
+    sans-serif;
+  text-transform: none;
+  outline: none;
+}
+.form input:focus {
+  border-color: #78aef8;
+  box-shadow: 0 0 0 1px #78aef8;
+}
+.form input:disabled {
+  opacity: 0.45;
+}
+.form small {
+  color: rgba(240, 237, 230, 0.34);
+  font-size: 0.56rem;
+  text-transform: none;
+}
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.labelRow a {
+  color: #8ebeff;
+  text-decoration: none;
+  text-transform: none;
+}
 
 .primaryButton,
 .googleButton,
-.actions button { min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 0.55rem; padding: 0 1rem; font-family: "Chivo Mono", monospace; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; }
-.primaryButton { margin-top: 0.25rem; color: #080808; background: #78aef8; border: 1px solid #78aef8; text-transform: uppercase; }
-.primaryButton:hover:not(:disabled) { background: #9ac5ff; }
-.primaryButton:disabled, .googleButton:disabled, .actions button:disabled { cursor: wait; opacity: 0.55; }
-.googleButton { width: 100%; color: var(--auth-paper); background: transparent; border: 1px solid rgba(240, 237, 230, 0.2); }
-.googleButton:hover:not(:disabled) { background: rgba(240, 237, 230, 0.05); }
-.googleMark { width: 20px; height: 20px; display: grid; place-items: center; color: #0a0a0a; background: var(--auth-paper); border-radius: 50%; font-family: Arial, sans-serif; font-weight: 800; }
-.divider { height: 42px; display: flex; align-items: center; color: rgba(240, 237, 230, 0.28); font: 0.57rem "Chivo Mono", monospace; }
-.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: rgba(240, 237, 230, 0.1); }
-.divider span { padding: 0 0.7rem; }
-.spinner { animation: spin 800ms linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.formError { margin: 0; padding: 0.65rem 0.75rem; color: #ffaaa0; background: rgba(255, 80, 60, 0.07); border-left: 2px solid #ff7768; font-size: 0.74rem; line-height: 1.45; }
-.notice { display: grid; gap: 0.65rem; padding: 1rem; border: 1px solid rgba(120, 174, 248, 0.35); background: rgba(120, 174, 248, 0.06); }
-.notice strong { font-size: 0.94rem; }
-.notice p { margin: 0; color: rgba(240, 237, 230, 0.58); font-size: 0.8rem; line-height: 1.55; }
-.notice p span { color: var(--auth-paper); }
-.notice a { display: flex; align-items: center; gap: 0.4rem; color: #8ebeff; font: 0.64rem "Chivo Mono", monospace; text-decoration: none; text-transform: uppercase; }
-.footer { margin-top: 1.5rem; padding-top: 1.2rem; color: rgba(240, 237, 230, 0.45); border-top: 1px solid rgba(240, 237, 230, 0.1); font-size: 0.76rem; text-align: center; }
-.footer a { color: #8ebeff; text-decoration: none; }
-
-.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.5rem; }
-.actions button { color: var(--auth-paper); background: transparent; border: 1px solid rgba(240, 237, 230, 0.2); }
-.actions .dangerButton { color: #ffaaa0; border-color: rgba(255, 119, 104, 0.35); }
-.actions .formError { grid-column: 1 / -1; }
-
-.accountDetails { display: grid; gap: 0; margin: 0; border: 1px solid rgba(240, 237, 230, 0.14); }
-.accountDetails div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 0.8rem; padding: 0.8rem; border-bottom: 1px solid rgba(240, 237, 230, 0.1); }
-.accountDetails div:last-child { border-bottom: 0; }
-.accountDetails dt { color: rgba(240, 237, 230, 0.35); font: 0.58rem "Chivo Mono", monospace; letter-spacing: 0.08em; text-transform: uppercase; }
-.accountDetails dd { min-width: 0; margin: 0; overflow-wrap: anywhere; color: rgba(240, 237, 230, 0.78); font-size: 0.78rem; }
-
-@media (max-width: 520px) {
-  .homeLink { display: none; }
-  .stage { align-items: start; padding-top: 1rem; }
-  .card { padding: 1.35rem; }
-  .actions { grid-template-columns: 1fr; }
+.actions button {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0 1rem;
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+.primaryButton {
+  margin-top: 0.25rem;
+  color: #080808;
+  background: #78aef8;
+  border: 1px solid #78aef8;
+  text-transform: uppercase;
+}
+.primaryButton:hover:not(:disabled) {
+  background: #9ac5ff;
+}
+.primaryButton:disabled,
+.googleButton:disabled,
+.actions button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+.googleButton {
+  width: 100%;
+  color: var(--auth-paper);
+  background: transparent;
+  border: 1px solid rgba(240, 237, 230, 0.2);
+}
+.googleButton:hover:not(:disabled) {
+  background: rgba(240, 237, 230, 0.05);
+}
+.googleMark {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  color: #0a0a0a;
+  background: var(--auth-paper);
+  border-radius: 50%;
+  font-family: Arial, sans-serif;
+  font-weight: 800;
+}
+.divider {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  color: rgba(240, 237, 230, 0.28);
+  font:
+    0.57rem "Chivo Mono",
+    monospace;
+}
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(240, 237, 230, 0.1);
+}
+.divider span {
+  padding: 0 0.7rem;
+}
+.spinner {
+  animation: spin 800ms linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+.formError {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  color: #ffaaa0;
+  background: rgba(255, 80, 60, 0.07);
+  border-left: 2px solid #ff7768;
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+.notice {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+  border: 1px solid rgba(120, 174, 248, 0.35);
+  background: rgba(120, 174, 248, 0.06);
+}
+.notice strong {
+  font-size: 0.94rem;
+}
+.notice p {
+  margin: 0;
+  color: rgba(240, 237, 230, 0.58);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+.notice p span {
+  color: var(--auth-paper);
+}
+.notice a {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #8ebeff;
+  font:
+    0.64rem "Chivo Mono",
+    monospace;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.footer {
+  margin-top: 1.5rem;
+  padding-top: 1.2rem;
+  color: rgba(240, 237, 230, 0.45);
+  border-top: 1px solid rgba(240, 237, 230, 0.1);
+  font-size: 0.76rem;
+  text-align: center;
+}
+.footer a {
+  color: #8ebeff;
+  text-decoration: none;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.actions button {
+  color: var(--auth-paper);
+  background: transparent;
+  border: 1px solid rgba(240, 237, 230, 0.2);
+}
+.actions .dangerButton {
+  color: #ffaaa0;
+  border-color: rgba(255, 119, 104, 0.35);
+}
+.actions .formError {
+  grid-column: 1 / -1;
+}
+
+.accountDetails {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  border: 1px solid rgba(240, 237, 230, 0.14);
+}
+.accountDetails div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 0.8rem;
+  padding: 0.8rem;
+  border-bottom: 1px solid rgba(240, 237, 230, 0.1);
+}
+.accountDetails div:last-child {
+  border-bottom: 0;
+}
+.accountDetails dt {
+  color: rgba(240, 237, 230, 0.35);
+  font:
+    0.58rem "Chivo Mono",
+    monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.accountDetails dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: rgba(240, 237, 230, 0.78);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 520px) {
+  .homeLink {
+    display: none;
+  }
+  .stage {
+    align-items: start;
+    padding-top: 1rem;
+  }
+  .card {
+    padding: 1.35rem;
+  }
+  .actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

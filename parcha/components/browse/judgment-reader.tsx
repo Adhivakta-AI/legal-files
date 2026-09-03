@@ -31,14 +31,23 @@ function benchStrength(size: number | null): string | null {
   return `Division Bench (${size})`
 }
 
-export function JudgmentReader({ judgment }: { judgment: JudgmentSummary }) {
+export function JudgmentReader({
+  judgment,
+  initialPdfPage,
+}: {
+  judgment: JudgmentSummary
+  initialPdfPage?: number | null
+}) {
   const [panelOpen, setPanelOpen] = useState(true)
 
   const pdfSrc = useMemo(() => {
     if (!judgment.pdf_url) return ""
     const base = judgment.pdf_url.split("#")[0]
-    return `${base}#view=FitH&toolbar=1`
-  }, [judgment.pdf_url])
+    const page = initialPdfPage && initialPdfPage > 0 ? initialPdfPage : null
+    return page
+      ? `${base}#page=${page}&view=FitH&toolbar=1`
+      : `${base}#view=FitH&toolbar=1`
+  }, [initialPdfPage, judgment.pdf_url])
 
   const date = formatDate(judgment.decision_date)
   const strength = benchStrength(judgment.bench_size)

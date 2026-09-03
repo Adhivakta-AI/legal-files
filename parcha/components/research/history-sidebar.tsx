@@ -1,6 +1,7 @@
 "use client"
 
 import { History, Plus, Search, X } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import type { HistoryItem } from "./lib/history-storage"
 import styles from "./research.module.css"
@@ -8,6 +9,7 @@ import { useHistoryStore } from "./store/history-store"
 import { useResearchStore } from "./store/research-store"
 
 export function HistorySidebar() {
+  const router = useRouter()
   const items = useHistoryStore((state) => state.items)
   const open = useHistoryStore((state) => state.open)
   const setOpen = useHistoryStore((state) => state.setOpen)
@@ -22,6 +24,7 @@ export function HistorySidebar() {
   const pick = (item: HistoryItem) => {
     restore(item)
     setOpen(false)
+    router.push(item.mode === "search" ? "/search" : "/ai-pro")
   }
 
   return (

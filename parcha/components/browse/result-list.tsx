@@ -2,6 +2,7 @@
 
 import type { BrowseSort } from "@/lib/browse/types"
 
+import { BrowseInlineResultsSkeleton } from "../loading/page-skeletons"
 import { ActiveFilters } from "./active-filters"
 import styles from "./browse.module.css"
 import { Pagination } from "./pagination"
@@ -29,7 +30,7 @@ export function ResultList() {
   const lastOnPage = Math.min(total, (page - 1) * pageSize + results.length)
 
   return (
-    <section className={styles.results}>
+    <section className={styles.results} aria-busy={loading}>
       <div className={styles.resultsBar}>
         <span className={styles.resultsCount}>
           {total > 0 ? (
@@ -73,13 +74,17 @@ export function ResultList() {
       ) : null}
 
       <div className={styles.resultList}>
-        {results.map((judgment, offset) => (
-          <ResultCard
-            key={judgment.judgment_id}
-            judgment={judgment}
-            index={firstOnPage + offset}
-          />
-        ))}
+        {loading && results.length === 0 ? (
+          <BrowseInlineResultsSkeleton />
+        ) : (
+          results.map((judgment, offset) => (
+            <ResultCard
+              key={judgment.judgment_id}
+              judgment={judgment}
+              index={firstOnPage + offset}
+            />
+          ))
+        )}
       </div>
 
       <Pagination />

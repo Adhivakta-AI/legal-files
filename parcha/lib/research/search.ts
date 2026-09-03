@@ -81,21 +81,30 @@ async function requestSearch({
   })
 
   const payload = (await response.json().catch(() => ({}))) as SearchResponse
-  console.info(JSON.stringify({
-    event: "search_service.response",
-    operation: "search",
-    status: response.status,
-    duration_ms: Math.round(performance.now() - startedAt),
-  }))
+  console.info(
+    JSON.stringify({
+      event: "search_service.response",
+      operation: "search",
+      status: response.status,
+      duration_ms: Math.round(performance.now() - startedAt),
+    })
+  )
   if (!response.ok) {
-    const message = typeof payload.error === "string" ? payload.error : "Search request failed"
+    const message =
+      typeof payload.error === "string"
+        ? payload.error
+        : "Search request failed"
     throw new Error(`Search API returned ${response.status}: ${message}`)
   }
-  if (!Array.isArray(payload.results)) throw new Error("Search API returned an invalid result set")
+  if (!Array.isArray(payload.results))
+    throw new Error("Search API returned an invalid result set")
   return payload.results.filter(isSearchChunk)
 }
 
-function capChunksPerJudgment(chunks: SearchChunk[], maxPerJudgment = 2): SearchChunk[] {
+function capChunksPerJudgment(
+  chunks: SearchChunk[],
+  maxPerJudgment = 2
+): SearchChunk[] {
   const seen = new Map<string, number>()
   return chunks.filter((chunk) => {
     const count = seen.get(chunk.judgment_id) ?? 0
@@ -109,6 +118,7 @@ export async function retrieveChunks({
   query,
   originalQuery,
   limit = 14,
+  maxPerJudgment = 2,
   yearFrom,
   yearTo,
   order = "relevance",
@@ -118,6 +128,7 @@ export async function retrieveChunks({
   query: string
   originalQuery: string
   limit?: number
+  maxPerJudgment?: number
   yearFrom?: number
   yearTo?: number
   order?: "relevance" | "recent"
@@ -156,7 +167,10 @@ export async function retrieveChunks({
     chunks = [...byChunk.values()]
   }
 
-  return { chunks: capChunksPerJudgment(chunks).slice(0, 12), widened }
+  return {
+    chunks: capChunksPerJudgment(chunks, maxPerJudgment).slice(0, limit),
+    widened,
+  }
 }
 
 function isJudgmentContext(value: unknown): value is JudgmentContext {
@@ -199,15 +213,22 @@ export async function retrieveJudgmentContexts({
     contexts?: unknown
     error?: unknown
   }
-  console.info(JSON.stringify({
-    event: "search_service.response",
-    operation: "judgment_context",
-    status: response.status,
-    duration_ms: Math.round(performance.now() - startedAt),
-  }))
+  console.info(
+    JSON.stringify({
+      event: "search_service.response",
+      operation: "judgment_context",
+      status: response.status,
+      duration_ms: Math.round(performance.now() - startedAt),
+    })
+  )
   if (!response.ok) {
-    const message = typeof payload.error === "string" ? payload.error : "Context request failed"
-    throw new Error(`Search context API returned ${response.status}: ${message}`)
+    const message =
+      typeof payload.error === "string"
+        ? payload.error
+        : "Context request failed"
+    throw new Error(
+      `Search context API returned ${response.status}: ${message}`
+    )
   }
   if (!Array.isArray(payload.contexts)) {
     throw new Error("Search context API returned an invalid context set")

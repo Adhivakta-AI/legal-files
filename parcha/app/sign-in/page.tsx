@@ -22,9 +22,16 @@ export default async function SignInPage({
       eyebrow="Secure research access"
       title="Welcome back."
       description="Sign in to use the citation-grounded research workspace."
-      footer={<>New to Lex Archives? <Link href="/sign-up">Create an account</Link></>}
+      footer={
+        <>
+          New to Lex Archives? <Link href="/sign-up">Create an account</Link>
+        </>
+      }
     >
-      <SignInForm callbackURL={safeCallback(callbackURL)} googleEnabled={isGoogleAuthConfigured()} />
+      <SignInForm
+        callbackURL={safeCallback(callbackURL)}
+        googleEnabled={isGoogleAuthConfigured()}
+      />
     </AuthShell>
   )
 }

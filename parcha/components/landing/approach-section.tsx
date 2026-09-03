@@ -1,11 +1,12 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef } from "react"
 import { useGSAP } from "@gsap/react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { ApproachShader } from "./approach-shader"
 import { Badge } from "./primitives"
+import { useLandingUiStore } from "./store/landing-ui-store"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -133,7 +134,9 @@ export function ApproachSection() {
   const sectionVisibleRef = useRef(false)
   const interactionPausedRef = useRef(false)
   const reducedMotionRef = useRef(false)
-  const [active, setActive] = useState(0)
+  const active = useLandingUiStore((state) => state.approachStep)
+  const setActive = useLandingUiStore((state) => state.setApproachStep)
+  const advanceActive = useLandingUiStore((state) => state.advanceApproachStep)
 
   const syncTimerPlayback = () => {
     const timer = timerRef.current
@@ -168,7 +171,7 @@ export function ApproachSection() {
         duration: 6,
         ease: "none",
         paused: true,
-        onComplete: () => setActive((value) => (value + 1) % steps.length),
+        onComplete: () => advanceActive(steps.length),
       })
       timerRef.current = tween
       syncTimerPlayback()

@@ -15,7 +15,9 @@ export default async function VerifyEmailPage({
   return (
     <AuthShell
       eyebrow="Email verification"
-      title={params.verified === "true" ? "Address confirmed." : "Check your inbox."}
+      title={
+        params.verified === "true" ? "Address confirmed." : "Check your inbox."
+      }
       description="Email verification protects the archive from automated abuse."
       footer={<Link href="/sign-in">Return to sign in</Link>}
     >
@@ -27,4 +29,3 @@ export default async function VerifyEmailPage({
     </AuthShell>
   )
 }
-

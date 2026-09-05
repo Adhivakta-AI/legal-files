@@ -12,6 +12,10 @@
   backdrop-filter: blur(14px);
 }
 
+:global(.light) .header {
+  box-shadow: 0 4px 18px rgba(25, 47, 82, 0.07);
+}
+
 .brand {
   width: 260px;
   flex: 0 0 auto;
@@ -124,6 +128,12 @@
   background: var(--panel-strong);
 }
 
+:global(.light) .navLink[data-active="true"] {
+  color: var(--accent-light);
+  border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+  font-weight: 800;
+}
+
 .themeButton,
 .mobileAction {
   align-self: center;
@@ -206,7 +216,10 @@
   color: var(--paper);
   background: var(--surface-raised);
   border: 1px solid var(--line);
-  box-shadow: 0 20px 48px color-mix(in srgb, var(--ink) 45%, transparent);
+  box-shadow: var(
+    --shadow-popover,
+    0 20px 48px color-mix(in srgb, var(--ink) 45%, transparent)
+  );
 }
 
 .accountIdentity {

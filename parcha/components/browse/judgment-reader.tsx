@@ -3,10 +3,13 @@
 import {
   ArrowLeft,
   Download,
+  Moon,
   PanelLeftClose,
   PanelLeftOpen,
+  Sun,
 } from "lucide-react"
 import Link from "next/link"
+import { useTheme } from "next-themes"
 import { useMemo, useState } from "react"
 
 import { LANGUAGE_LABELS, type JudgmentSummary } from "@/lib/browse/types"
@@ -39,6 +42,8 @@ export function JudgmentReader({
   initialPdfPage?: number | null
 }) {
   const [panelOpen, setPanelOpen] = useState(true)
+  const { resolvedTheme, setTheme } = useTheme()
+  const dark = resolvedTheme !== "light"
 
   const pdfSrc = useMemo(() => {
     if (!judgment.pdf_url) return ""
@@ -73,6 +78,16 @@ export function JudgmentReader({
         </button>
         <span className={styles.toolbarTitle}>{judgment.title}</span>
         <div className={styles.toolbarActions}>
+          <button
+            type="button"
+            className={styles.panelToggle}
+            onClick={() => setTheme(dark ? "light" : "dark")}
+            aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+            title={dark ? "Light mode" : "Dark mode"}
+          >
+            {dark ? <Sun size={13} /> : <Moon size={13} />}
+            THEME
+          </button>
           {judgment.pdf_url ? (
             <a
               href={judgment.pdf_url}

@@ -12,6 +12,7 @@ import { useHistoryStore } from "./store/history-store"
 import { useResearchStore } from "./store/research-store"
 
 export function AnswerPanel() {
+  const query = useResearchStore((state) => state.query)
   const result = useResearchStore((state) => state.result)
   const streamedAnswer = useResearchStore((state) => state.streamedAnswer)
   const mode = useResearchStore((state) => state.mode)
@@ -48,15 +49,16 @@ export function AnswerPanel() {
     <section className={styles.answerSection}>
       <div className={styles.answerHeader}>
         <div>
-          <span className={styles.eyebrow}>
+          {/* <span className={styles.eyebrow}>
             {displayMode === "search"
               ? "CLOUDFLARE SEARCH"
               : "GROUNDED RESPONSE"}
-          </span>
+          </span> */}
           <h2>
-            {displayMode === "search"
-              ? "Relevant cases"
-              : "Research memorandum"}
+            {query}
+            {/* {displayMode === "search" */}
+              {/* ? "Relevant cases" */}
+              {/* : "Research memorandum"} */}
           </h2>
         </div>
         {result ? (

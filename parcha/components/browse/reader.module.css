@@ -1,12 +1,51 @@
 .root {
   --line: rgba(240, 237, 230, 0.13);
   --line-soft: rgba(240, 237, 230, 0.07);
+  --paper-80: rgba(240, 237, 230, 0.8);
+  --paper-75: rgba(240, 237, 230, 0.75);
+  --paper-55: rgba(240, 237, 230, 0.55);
+  --surface-chrome: rgba(10, 10, 10, 0.96);
+  --surface-panel: rgba(10, 10, 10, 0.55);
+  --surface-control: rgba(240, 237, 230, 0.03);
+  --viewer: #2b2b2b;
   position: fixed;
   inset: 0;
   display: flex;
   flex-direction: column;
   background: var(--ink);
   color: var(--paper);
+  color-scheme: dark;
+}
+
+:global(.light) .root {
+  --accent: #1463ff;
+  --accent-light: #0b4fc1;
+  --ink: #f3f1ea;
+  --paper: #111722;
+  --paper-80: rgba(21, 25, 31, 0.92);
+  --paper-75: rgba(21, 25, 31, 0.88);
+  --paper-70: rgba(21, 25, 31, 0.86);
+  --paper-60: rgba(21, 25, 31, 0.78);
+  --paper-55: rgba(21, 25, 31, 0.74);
+  --paper-50: rgba(21, 25, 31, 0.72);
+  --paper-45: rgba(21, 25, 31, 0.7);
+  --paper-40: rgba(21, 25, 31, 0.68);
+  --paper-35: rgba(21, 25, 31, 0.66);
+  --paper-30: rgba(21, 25, 31, 0.64);
+  --paper-25: rgba(21, 25, 31, 0.62);
+  --paper-20: rgba(21, 25, 31, 0.24);
+  --paper-15: rgba(21, 25, 31, 0.17);
+  --paper-12: rgba(21, 25, 31, 0.13);
+  --paper-06: rgba(21, 25, 31, 0.065);
+  --paper-04: rgba(21, 25, 31, 0.045);
+  --paper-02: rgba(21, 25, 31, 0.025);
+  --line: rgba(21, 40, 70, 0.22);
+  --line-soft: rgba(21, 40, 70, 0.13);
+  --surface-chrome: rgba(255, 255, 255, 0.96);
+  --surface-panel: rgba(249, 248, 244, 0.96);
+  --surface-control: rgba(20, 99, 255, 0.075);
+  --viewer: #e6e8eb;
+  color-scheme: light;
 }
 
 /* -------------------------------------------------------------- toolbar */
@@ -17,7 +56,7 @@
   gap: 1rem;
   height: 56px;
   padding: 0 1rem;
-  background: rgba(10, 10, 10, 0.96);
+  background: var(--surface-chrome);
   border-bottom: 1px solid var(--line);
 }
 
@@ -62,7 +101,7 @@
   gap: 0.4rem;
   padding: 0.4rem 0.7rem;
   border: 1px solid var(--line);
-  background: rgba(240, 237, 230, 0.03);
+  background: var(--surface-control);
   color: var(--paper-70);
   text-decoration: none;
   cursor: pointer;
@@ -93,7 +132,7 @@
   min-width: 0;
   overflow-y: auto;
   border-right: 1px solid var(--line);
-  background: rgba(10, 10, 10, 0.55);
+  background: var(--surface-panel);
 }
 
 .body[data-panel="closed"] .panel {
@@ -118,6 +157,10 @@
   font-size: 1.05rem;
   line-height: 1.4;
   color: var(--paper);
+}
+
+:global(.light) .caseName {
+  font-weight: 700;
 }
 
 .parties {
@@ -190,7 +233,7 @@
 
 .viewer {
   min-width: 0;
-  background: #2b2b2b;
+  background: var(--viewer);
 }
 
 .viewer iframe {

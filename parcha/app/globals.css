@@ -40,9 +40,9 @@
 }
 
 .light [data-sonner-toaster] {
-  --normal-bg: #fffefa !important;
-  --normal-border: rgba(23, 23, 20, 0.16) !important;
-  --normal-text: #171714 !important;
+  --normal-bg: #fff !important;
+  --normal-border: rgba(20, 99, 255, 0.3) !important;
+  --normal-text: #111722 !important;
   --success-bg: #f5fff8 !important;
   --success-border: rgba(34, 197, 94, 0.35) !important;
   --success-text: #106c34 !important;
@@ -79,7 +79,7 @@
 }
 
 .light [data-sonner-toast] [data-description] {
-  color: rgba(23, 23, 20, 0.55) !important;
+  color: rgba(21, 25, 31, 0.72) !important;
 }
 
 [data-sonner-toast] [data-close-button] {

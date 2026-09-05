@@ -1,6 +1,7 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
 
+import { AuthThemeToggle } from "./auth-theme-toggle"
 import styles from "./auth.module.css"
 
 export function AuthShell({
@@ -23,9 +24,12 @@ export function AuthShell({
           <span>LA</span>
           <strong>LEX ARCHIVES</strong>
         </Link>
-        <Link href="/" className={styles.homeLink}>
-          Return home
-        </Link>
+        <div className={styles.headerActions}>
+          <Link href="/" className={styles.homeLink}>
+            Return home
+          </Link>
+          <AuthThemeToggle />
+        </div>
       </header>
 
       <section className={styles.stage}>

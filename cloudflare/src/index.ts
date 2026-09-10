@@ -10,6 +10,9 @@ interface Env {
   RRF_K: string;
   CORS_ORIGIN: string;
   SEARCH_SERVICE_TOKEN: string;
+  OPENSEARCH_API_URL?: string;
+  OPENSEARCH_BROWSE_API_URL?: string;
+  OPENSEARCH_API_TOKEN?: string;
 }
 
 interface SearchBody {
@@ -74,10 +77,18 @@ interface FacetBucket {
   count: number;
 }
 
+interface OpenSearchBrowseResult {
+  ids: string[];
+  total: number;
+  facets?: Record<string, FacetBucket[]>;
+}
+
 interface Candidate {
   id: string;
   score: number;
 }
+
+type KeywordBackend = "d1" | "opensearch";
 
 interface TitleCandidate {
   judgmentId: string;
@@ -266,7 +277,7 @@ function vectorFilter(
   return undefined;
 }
 
-async function keywordCandidates(
+async function d1KeywordCandidates(
   env: Env,
   query: string,
   limit: number,
@@ -290,6 +301,89 @@ async function keywordCandidates(
   return result.results.map((row) => ({ id: row.id, score: row.score }));
 }
 
+function openSearchApiUrl(value: string): string {
+  const url = new URL(value);
+  if (url.protocol !== "https:" && url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {
+    throw new Error("OPENSEARCH_API_URL must use HTTPS");
+  }
+  return url.toString();
+}
+
+function isCandidate(value: unknown): value is Candidate {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate = value as Partial<Candidate>;
+  return typeof candidate.id === "string" && typeof candidate.score === "number";
+}
+
+async function openSearchKeywordCandidates(
+  env: Env,
+  query: string,
+  limit: number,
+  yearFrom: number | null,
+  yearTo: number | null,
+): Promise<Candidate[]> {
+  if (!env.OPENSEARCH_API_URL || !env.OPENSEARCH_API_TOKEN) {
+    throw new Error("OpenSearch is not configured");
+  }
+  const response = await fetch(openSearchApiUrl(env.OPENSEARCH_API_URL), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${env.OPENSEARCH_API_TOKEN}`,
+    },
+    body: JSON.stringify({
+      query,
+      limit,
+      ...(yearFrom === null ? {} : { year_from: yearFrom }),
+      ...(yearTo === null ? {} : { year_to: yearTo }),
+    }),
+    signal: AbortSignal.timeout(5_000),
+  });
+  const payload = (await response.json().catch(() => ({}))) as {
+    results?: unknown;
+    error?: unknown;
+  };
+  if (!response.ok) {
+    const message = typeof payload.error === "string" ? payload.error : "OpenSearch request failed";
+    throw new Error(`OpenSearch gateway returned ${response.status}: ${message}`);
+  }
+  if (!Array.isArray(payload.results)) throw new Error("OpenSearch returned an invalid result set");
+  return payload.results.filter(isCandidate).slice(0, limit);
+}
+
+async function keywordCandidates(
+  env: Env,
+  query: string,
+  limit: number,
+  yearFrom: number | null,
+  yearTo: number | null,
+): Promise<{ candidates: Candidate[]; backend: KeywordBackend }> {
+  if (env.OPENSEARCH_API_URL && env.OPENSEARCH_API_TOKEN) {
+    const startedAt = performance.now();
+    try {
+      const candidates = await openSearchKeywordCandidates(env, query, limit, yearFrom, yearTo);
+      console.info(JSON.stringify({
+        event: "keyword_search.complete",
+        backend: "opensearch",
+        result_count: candidates.length,
+        duration_ms: Math.round(performance.now() - startedAt),
+      }));
+      return { candidates, backend: "opensearch" };
+    } catch (error) {
+      console.warn(JSON.stringify({
+        event: "keyword_search.fallback",
+        from: "opensearch",
+        to: "d1",
+        message: error instanceof Error ? error.message : "OpenSearch unavailable",
+      }));
+    }
+  }
+  return {
+    candidates: await d1KeywordCandidates(env, query, limit, yearFrom, yearTo),
+    backend: "d1",
+  };
+}
+
 async function embedQuery(env: Env, query: string): Promise<number[]> {
   const output = (await env.AI.run(env.BGE_MODEL as keyof AiModels, {
     text: [query],
@@ -298,6 +392,22 @@ async function embedQuery(env: Env, query: string): Promise<number[]> {
   const vector = output.data?.[0];
   if (!vector || vector.length !== 384) throw new Error("Workers AI returned an invalid embedding");
   return vector;
+}
+
+async function semanticCandidates(
+  env: Env,
+  query: string,
+  limit: number,
+  yearFrom: number | null,
+  yearTo: number | null,
+): Promise<Candidate[]> {
+  const embedding = await embedQuery(env, query);
+  const result = await env.VECTORIZE.query(embedding, {
+    topK: limit,
+    returnMetadata: "none",
+    filter: vectorFilter(yearFrom, yearTo),
+  });
+  return result.matches.map((match) => ({ id: match.id, score: match.score }));
 }
 
 async function fetchChunks(env: Env, ids: string[]): Promise<Map<string, ChunkRow>> {
@@ -350,17 +460,12 @@ async function search(env: Env, request: Request): Promise<Response> {
 
     const keywordLimit = integer(Number(env.KEYWORD_CANDIDATES), 80, 1, 100);
     const semanticLimit = integer(Number(env.SEMANTIC_CANDIDATES), 80, 1, 100);
-    const [keywords, embedding, directCandidates] = await Promise.all([
+    const [keywordResult, semantics, directCandidates] = await Promise.all([
       keywordCandidates(env, query, keywordLimit, yearFrom, yearTo),
-      embedQuery(env, query),
+      semanticCandidates(env, query, semanticLimit, yearFrom, yearTo),
       titleQuery ? safeTitleCandidates(env, titleQuery, yearFrom, yearTo) : Promise.resolve([]),
     ]);
-    const semanticResult = await env.VECTORIZE.query(embedding, {
-      topK: semanticLimit,
-      returnMetadata: "none",
-      filter: vectorFilter(yearFrom, yearTo),
-    });
-    const semantics = semanticResult.matches.map((match) => ({ id: match.id, score: match.score }));
+    const keywords = keywordResult.candidates;
 
     const rrfK = integer(Number(env.RRF_K), 60, 1, 1000);
     const combined = new Map<
@@ -424,6 +529,7 @@ async function search(env: Env, request: Request): Promise<Response> {
       event: "search.complete",
       result_count: results.length,
       direct_title_matches: directResults.length,
+      keyword_backend: keywordResult.backend,
       sort,
       duration_ms: Math.round(performance.now() - startedAt),
     }));
@@ -544,6 +650,132 @@ function browseFtsExpression(query: string): string | null {
   }
 }
 
+function browseFacetBuckets(value: unknown): FacetBucket[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (typeof item !== "object" || item === null) return [];
+    const bucket = item as Partial<FacetBucket>;
+    const validValue = typeof bucket.value === "string" || typeof bucket.value === "number";
+    return validValue && typeof bucket.count === "number" && Number.isInteger(bucket.count)
+      ? [{ value: bucket.value as string | number, count: bucket.count }]
+      : [];
+  });
+}
+
+async function openSearchBrowse(
+  env: Env,
+  body: Record<string, unknown>,
+): Promise<OpenSearchBrowseResult> {
+  if (!env.OPENSEARCH_BROWSE_API_URL || !env.OPENSEARCH_API_TOKEN) {
+    throw new Error("OpenSearch Browse is not configured");
+  }
+  const response = await fetch(openSearchApiUrl(env.OPENSEARCH_BROWSE_API_URL), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${env.OPENSEARCH_API_TOKEN}`,
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(7_000),
+  });
+  const payload = (await response.json().catch(() => ({}))) as {
+    results?: unknown;
+    total?: unknown;
+    facets?: unknown;
+    error?: unknown;
+  };
+  if (!response.ok) {
+    const message = typeof payload.error === "string" ? payload.error : "OpenSearch Browse failed";
+    throw new Error(`OpenSearch Browse gateway returned ${response.status}: ${message}`);
+  }
+  if (!Array.isArray(payload.results) || typeof payload.total !== "number") {
+    throw new Error("OpenSearch Browse returned an invalid response");
+  }
+  const ids = payload.results.flatMap((item) => {
+    if (typeof item !== "object" || item === null) return [];
+    const id = (item as { id?: unknown }).id;
+    return typeof id === "string" && id.length <= 64 ? [id] : [];
+  });
+  const rawFacets = typeof payload.facets === "object" && payload.facets !== null
+    ? payload.facets as Record<string, unknown>
+    : {};
+  const facets = {
+    disposal_nature: browseFacetBuckets(rawFacets.disposal_nature),
+    era: browseFacetBuckets(rawFacets.era),
+    decision_year: browseFacetBuckets(rawFacets.decision_year),
+    bench_size: browseFacetBuckets(rawFacets.bench_size),
+    judges: browseFacetBuckets(rawFacets.judges),
+  };
+  return {
+    ids,
+    total: Number.isInteger(payload.total) && payload.total >= 0 ? payload.total : 0,
+    facets: body.facets === true ? facets : undefined,
+  };
+}
+
+const BROWSE_ROW_COLUMNS = `
+  j.id, j.title, j.petitioner, j.respondent, j.citation, j.neutral_citation,
+  j.cnr, j.court, j.decision_date, j.decision_year, j.disposal_nature,
+  j.era, j.bench_size, j.available_languages, j.pdf_url, j.pdf_key`;
+
+async function browseRowsByIds(env: Env, ids: string[]): Promise<JudgmentRow[]> {
+  if (!ids.length) return [];
+  const placeholders = ids.map(() => "?").join(",");
+  const result = await env.DB.prepare(
+    `SELECT ${BROWSE_ROW_COLUMNS} FROM judgments j WHERE j.id IN (${placeholders})`,
+  )
+    .bind(...ids)
+    .all<JudgmentRow>();
+  const byId = new Map(result.results.map((row) => [row.id, row]));
+  return ids.flatMap((id) => {
+    const row = byId.get(id);
+    return row ? [row] : [];
+  });
+}
+
+async function browseSummaries(env: Env, rows: JudgmentRow[]) {
+  const benchByJudgment = new Map<string, string[]>();
+  if (rows.length) {
+    const placeholders = rows.map(() => "?").join(",");
+    const benchRows = await env.DB.prepare(
+      `SELECT jj.judgment_id AS jid, jd.name AS name
+         FROM judgment_judges jj JOIN judges jd ON jd.id = jj.judge_id
+        WHERE jj.judgment_id IN (${placeholders})
+        ORDER BY jj.judgment_id, jj.seat`,
+    )
+      .bind(...rows.map((row) => row.id))
+      .all<{ jid: string; name: string }>();
+    for (const entry of benchRows.results) {
+      const list = benchByJudgment.get(entry.jid) ?? [];
+      list.push(entry.name);
+      benchByJudgment.set(entry.jid, list);
+    }
+  }
+
+  return rows.map((row) => ({
+    judgment_id: row.id,
+    title: row.title,
+    petitioner: row.petitioner,
+    respondent: row.respondent,
+    citation: row.citation,
+    neutral_citation: row.neutral_citation,
+    cnr: row.cnr,
+    court: row.court,
+    decision_date: row.decision_date,
+    decision_year: row.decision_year,
+    disposal_nature: row.disposal_nature,
+    era: row.era,
+    bench_size: row.bench_size,
+    available_languages: (row.available_languages ?? "")
+      .split(",")
+      .map((code) => code.trim())
+      .filter(Boolean),
+    judges: benchByJudgment.get(row.id) ?? [],
+    pdf_url: row.pdf_url,
+    pdf_key: row.pdf_key,
+  }));
+}
+
 async function browse(env: Env, request: Request): Promise<Response> {
   const startedAt = performance.now();
   let body: BrowseBody;
@@ -589,6 +821,68 @@ async function browse(env: Env, request: Request): Promise<Response> {
     const offset = (page - 1) * pageSize;
 
     const ids = stringList(body.ids, 50, 64);
+    const benchSizes = Array.isArray(body.bench)
+      ? [...new Set(body.bench)].filter(
+          (value): value is number => Number.isInteger(value) && value >= 1 && value <= 50,
+        )
+      : [];
+
+    if (q && env.OPENSEARCH_BROWSE_API_URL && env.OPENSEARCH_API_TOKEN) {
+      const openSearchStartedAt = performance.now();
+      try {
+        const openSearch = await openSearchBrowse(env, {
+          q,
+          ids,
+          party,
+          reporter,
+          neutral_citation: neutralCitation,
+          year_from: yearFrom,
+          year_to: yearTo,
+          date_from: dateFrom,
+          date_to: dateTo,
+          judges,
+          disposal,
+          era,
+          language,
+          court,
+          bench: benchSizes,
+          bench_min: benchMin,
+          bench_max: benchMax,
+          sort,
+          page,
+          page_size: pageSize,
+          facets: wantFacets,
+        });
+        const rows = await browseRowsByIds(env, openSearch.ids);
+        const results = await browseSummaries(env, rows);
+        console.info(JSON.stringify({
+          event: "browse.complete",
+          backend: "opensearch",
+          total: openSearch.total,
+          page,
+          page_size: pageSize,
+          sort,
+          facets: wantFacets,
+          keyword_duration_ms: Math.round(performance.now() - openSearchStartedAt),
+          duration_ms: Math.round(performance.now() - startedAt),
+        }));
+        return jsonResponse(env, {
+          page,
+          page_size: pageSize,
+          total: openSearch.total,
+          sort,
+          results,
+          ...(openSearch.facets ? { facets: openSearch.facets } : {}),
+        });
+      } catch (error) {
+        console.warn(JSON.stringify({
+          event: "browse.fallback",
+          from: "opensearch",
+          to: "d1",
+          message: error instanceof Error ? error.message : "OpenSearch Browse unavailable",
+        }));
+      }
+    }
 
     const conditions: string[] = [];
     const binds: unknown[] = [];
@@ -660,11 +954,6 @@ async function browse(env: Env, request: Request): Promise<Response> {
       conditions.push("j.bench_size <= ?");
       binds.push(benchMax);
     }
-    const benchSizes = Array.isArray(body.bench)
-      ? [...new Set(body.bench)].filter(
-          (value): value is number => Number.isInteger(value) && value >= 1 && value <= 50,
-        )
-      : [];
     if (benchSizes.length) {
       conditions.push(`j.bench_size IN (${benchSizes.map(() => "?").join(",")})`);
       binds.push(...benchSizes);
@@ -696,9 +985,7 @@ async function browse(env: Env, request: Request): Promise<Response> {
         .bind(...binds)
         .first<{ n: number }>(),
       env.DB.prepare(
-        `SELECT j.id, j.title, j.petitioner, j.respondent, j.citation, j.neutral_citation,
-                j.cnr, j.court, j.decision_date, j.decision_year, j.disposal_nature,
-                j.era, j.bench_size, j.available_languages, j.pdf_url, j.pdf_key
+        `SELECT ${BROWSE_ROW_COLUMNS}
            ${fromSql} ${whereSql}
           ORDER BY ${orderBy}
           LIMIT ? OFFSET ?`,
@@ -709,47 +996,7 @@ async function browse(env: Env, request: Request): Promise<Response> {
 
     const rows = pageResult.results;
     const total = countRow?.n ?? 0;
-
-    const benchByJudgment = new Map<string, string[]>();
-    if (rows.length) {
-      const placeholders = rows.map(() => "?").join(",");
-      const benchRows = await env.DB.prepare(
-        `SELECT jj.judgment_id AS jid, jd.name AS name
-           FROM judgment_judges jj JOIN judges jd ON jd.id = jj.judge_id
-          WHERE jj.judgment_id IN (${placeholders})
-          ORDER BY jj.judgment_id, jj.seat`,
-      )
-        .bind(...rows.map((row) => row.id))
-        .all<{ jid: string; name: string }>();
-      for (const entry of benchRows.results) {
-        const list = benchByJudgment.get(entry.jid) ?? [];
-        list.push(entry.name);
-        benchByJudgment.set(entry.jid, list);
-      }
-    }
-
-    const results = rows.map((row) => ({
-      judgment_id: row.id,
-      title: row.title,
-      petitioner: row.petitioner,
-      respondent: row.respondent,
-      citation: row.citation,
-      neutral_citation: row.neutral_citation,
-      cnr: row.cnr,
-      court: row.court,
-      decision_date: row.decision_date,
-      decision_year: row.decision_year,
-      disposal_nature: row.disposal_nature,
-      era: row.era,
-      bench_size: row.bench_size,
-      available_languages: (row.available_languages ?? "")
-        .split(",")
-        .map((code) => code.trim())
-        .filter(Boolean),
-      judges: benchByJudgment.get(row.id) ?? [],
-      pdf_url: row.pdf_url,
-      pdf_key: row.pdf_key,
-    }));
+    const results = await browseSummaries(env, rows);
 
     let facets: Record<string, FacetBucket[]> | undefined;
     if (wantFacets) {
@@ -789,6 +1036,7 @@ async function browse(env: Env, request: Request): Promise<Response> {
     console.info(
       JSON.stringify({
         event: "browse.complete",
+        backend: "d1",
         total,
         page,
         page_size: pageSize,

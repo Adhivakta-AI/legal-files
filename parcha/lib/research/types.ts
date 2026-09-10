@@ -1,5 +1,14 @@
 export type ResearchMode = "search" | "ai_pro"
 
+export type SearchSortOrder = "relevance" | "recent"
+
+export interface SemanticSearchFilters {
+  year_from?: number
+  year_to?: number
+  sort: SearchSortOrder
+  limit: number
+}
+
 export type SynthesisStatus = "not_requested" | "grounded" | "retrieval_only"
 
 export type LegalIntent =
@@ -127,4 +136,5 @@ export interface ResearchRequest {
   limit?: number
   year_from?: number
   year_to?: number
+  sort?: SearchSortOrder
 }

@@ -6,6 +6,7 @@ import type {
   ResearchMode,
   ResearchResult,
   SearchChunk,
+  SemanticSearchFilters,
 } from "@/lib/research/types"
 
 import type { HistoryItem } from "../lib/history-storage"
@@ -15,6 +16,11 @@ import { useHistoryStore } from "./history-store"
 
 const MIN_QUERY_LENGTH = 3
 const MAX_QUERY_LENGTH = 3000
+
+export const DEFAULT_SEARCH_FILTERS: SemanticSearchFilters = {
+  sort: "relevance",
+  limit: 40,
+}
 
 interface ResearchState {
   query: string
@@ -29,11 +35,13 @@ interface ResearchState {
   hasSubmitted: boolean
   expandedCitationId: string | null
   citationPage: number
+  searchFilters: SemanticSearchFilters
 }
 
 interface ResearchActions {
   setQuery: (query: string) => void
   setMode: (mode: ResearchMode) => void
+  setSearchFilters: (filters: SemanticSearchFilters) => void
   toggleCitation: (judgmentId: string) => void
   setExpandedCitation: (judgmentId: string | null) => void
   setCitationPage: (page: number) => void
@@ -66,6 +74,7 @@ const idleState: ResearchState = {
   hasSubmitted: false,
   expandedCitationId: null,
   citationPage: 1,
+  searchFilters: DEFAULT_SEARCH_FILTERS,
 }
 
 export const useResearchStore = create<ResearchState & ResearchActions>(
@@ -75,6 +84,8 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
     setQuery: (query) => set({ query: query.slice(0, MAX_QUERY_LENGTH) }),
 
     setMode: (mode) => set({ mode }),
+
+    setSearchFilters: (searchFilters) => set({ searchFilters }),
 
     toggleCitation: (judgmentId) =>
       set((state) => ({
@@ -134,7 +145,7 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
     },
 
     submit: async () => {
-      const { query, mode, running } = get()
+      const { query, mode, running, searchFilters } = get()
       const submittedQuery = query.trim()
       if (submittedQuery.length < MIN_QUERY_LENGTH || running) return
 
@@ -166,6 +177,7 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
         await runResearchStream({
           query: submittedQuery,
           mode,
+          ...(mode === "search" ? { filters: searchFilters } : {}),
           signal: controller.signal,
           onEvent: (event) => {
             switch (event.type) {

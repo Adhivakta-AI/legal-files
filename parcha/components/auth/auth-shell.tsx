@@ -1,6 +1,8 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
 
+import { BrandMark } from "@/components/brand-mark"
+
 import { AuthThemeToggle } from "./auth-theme-toggle"
 import styles from "./auth.module.css"
 
@@ -21,7 +23,7 @@ export function AuthShell({
     <main className={styles.page}>
       <header className={styles.header}>
         <Link href="/" className={styles.brand} aria-label="Lex Archives home">
-          <span>LA</span>
+          <BrandMark className={styles.brandMark} />
           <strong>LEX ARCHIVES</strong>
         </Link>
         <div className={styles.headerActions}>

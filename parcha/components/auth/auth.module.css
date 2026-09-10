@@ -85,16 +85,15 @@
   font-size: 0.82rem;
   letter-spacing: 0.08em;
 }
-.brand span {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  color: var(--auth-accent-text);
-  background: var(--auth-accent);
-  font-family: "Chivo Mono", monospace;
-  font-size: 0.65rem;
-  font-weight: 800;
+.brandMark {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  color: var(--auth-accent);
+  --brand-mark-cutout: var(--auth-bg);
+  filter: drop-shadow(
+    0 0 13px color-mix(in srgb, var(--auth-accent) 28%, transparent)
+  );
 }
 .homeLink {
   color: var(--auth-secondary);

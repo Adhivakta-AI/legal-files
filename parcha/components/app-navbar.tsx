@@ -20,6 +20,7 @@ import {
 } from "@/components/research/research-account-menu"
 import { Button } from "@/components/ui/button"
 
+import { BrandMark } from "./brand-mark"
 import styles from "./app-navbar.module.css"
 
 const navItems = [
@@ -49,7 +50,7 @@ export function AppNavbar({
   return (
     <header className={styles.header}>
       <Link href="/" className={styles.brand} aria-label="Lex Archives home">
-        <span className={styles.brandMark}>LA</span>
+        <BrandMark className={styles.brandMark} />
         <span className={styles.brandCopy}>
           <strong>LEX ARCHIVES</strong>
           <span>INDIAN CASE-LAW INTELLIGENCE</span>

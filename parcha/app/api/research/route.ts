@@ -12,6 +12,7 @@ import type {
   ResearchResult,
   ResearchStreamEvent,
   SearchChunk,
+  SearchSortOrder,
 } from "@/lib/research/types"
 
 export const runtime = "nodejs"
@@ -60,12 +61,15 @@ function normalizedRequest(value: unknown): ResearchRequest {
   if (yearFrom && yearTo && yearFrom > yearTo) {
     throw new Error("year_from must be less than or equal to year_to")
   }
+  const sort: SearchSortOrder | undefined =
+    body.sort === "relevance" || body.sort === "recent" ? body.sort : undefined
   return {
     query,
     mode,
     ...(limit ? { limit } : {}),
     ...(yearFrom ? { year_from: yearFrom } : {}),
     ...(yearTo ? { year_to: yearTo } : {}),
+    ...(sort ? { sort } : {}),
   }
 }
 
@@ -183,7 +187,7 @@ export async function POST(request: Request): Promise<Response> {
               ? "Correcting spelling without rewriting the query"
               : "Normalizing legal language and party names"
           )
-          const analysis =
+          const analyzedQuery =
             input.mode === "search"
               ? await analyzeSearchQuery(input.query, pipelineAbort.signal)
               : await analyzeQuery(
@@ -191,6 +195,9 @@ export async function POST(request: Request): Promise<Response> {
                   input.mode,
                   pipelineAbort.signal
                 )
+          const analysis: QueryAnalysis = input.sort
+            ? { ...analyzedQuery, retrieval_order: input.sort }
+            : analyzedQuery
           const analysisMs = Math.round(performance.now() - analysisStarted)
           console.info(
             JSON.stringify({
@@ -263,6 +270,7 @@ export async function POST(request: Request): Promise<Response> {
             yearFrom: input.year_from,
             yearTo: input.year_to,
             order: analysis.retrieval_order,
+            widenYearFilter: !input.year_from && !input.year_to,
             titleQuery: analysis.case_name_query ?? undefined,
             signal: pipelineAbort.signal,
           })
@@ -280,7 +288,7 @@ export async function POST(request: Request): Promise<Response> {
               ? "Year filter widened after an empty first pass"
               : analysis.case_name_query
                 ? "Cloudflare D1 title match · passage retrieval second"
-                : "Cloudflare D1 FTS5 + Workers AI Vectorize · RRF fused",
+                : "Keyword index + Workers AI Vectorize · RRF fused",
             retrievalMs
           )
           emit({

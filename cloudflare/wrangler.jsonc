@@ -26,6 +26,8 @@
     "SEMANTIC_CANDIDATES": "80",
     "KEYWORD_CANDIDATES": "80",
     "RRF_K": "60",
+    "OPENSEARCH_API_URL": "https://search.adhivaktaai.com/v1/keyword",
+    "OPENSEARCH_BROWSE_API_URL": "https://search.adhivaktaai.com/v1/browse",
     "CORS_ORIGIN": "https://lex-archives-app.politestranger18.workers.dev"
   }
 }

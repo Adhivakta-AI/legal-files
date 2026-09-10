@@ -1,0 +1,57 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "refresh_interval": "30s",
+    "analysis": {
+      "filter": {
+        "legal_english_stemmer": {
+          "type": "stemmer",
+          "language": "light_english"
+        }
+      },
+      "analyzer": {
+        "legal_exact": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding"]
+        },
+        "legal_stemmed": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding", "legal_english_stemmer"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "dynamic": "strict",
+    "properties": {
+      "judgment_id": { "type": "keyword" },
+      "title": {
+        "type": "text",
+        "analyzer": "legal_exact",
+        "fields": { "keyword": { "type": "keyword", "ignore_above": 512 } }
+      },
+      "citation": { "type": "keyword", "ignore_above": 256 },
+      "decision_date": { "type": "date", "format": "strict_date", "ignore_malformed": true },
+      "decision_year": { "type": "short" },
+      "era": { "type": "keyword" },
+      "judge": { "type": "text", "analyzer": "legal_exact" },
+      "court": { "type": "keyword" },
+      "pdf_page": { "type": "integer" },
+      "paragraph_number": { "type": "keyword", "ignore_above": 64 },
+      "text_source": { "type": "keyword" },
+      "batch_id": { "type": "keyword" },
+      "text": {
+        "type": "text",
+        "analyzer": "legal_exact",
+        "index_options": "offsets",
+        "fields": {
+          "stemmed": { "type": "text", "analyzer": "legal_stemmed" }
+        }
+      }
+    }
+  }
+}
+

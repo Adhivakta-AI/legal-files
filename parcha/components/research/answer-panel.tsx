@@ -109,7 +109,7 @@ export function AnswerPanel() {
         <div className={styles.answerWaiting}>
           <span className={styles.streamCursor} />
           {displayMode === "search"
-            ? "Searching Cloudflare D1 and Vectorize for relevant cases."
+            ? "Searching keyword and semantic indexes for relevant cases."
             : sources.length
               ? "Sources locked. Building a grounded answer."
               : "The analyzer is preparing a retrieval query."}

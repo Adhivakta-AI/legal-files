@@ -1,0 +1,52 @@
+services:
+  opensearch:
+    image: opensearchproject/opensearch:3.8.0
+    restart: unless-stopped
+    environment:
+      - cluster.name=parcha-keyword-search
+      - node.name=parcha-opensearch-1
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - DISABLE_SECURITY_PLUGIN=true
+      - OPENSEARCH_JAVA_OPTS=-Xms4g -Xmx4g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    mem_limit: 8g
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - "127.0.0.1:9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  keyword-gateway:
+    build: ./gateway
+    restart: unless-stopped
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    environment:
+      PORT: "7711"
+      OPENSEARCH_URL: http://opensearch:9200
+      OPENSEARCH_INDEX_ALIAS: ${OPENSEARCH_INDEX_ALIAS:-judgment-chunks-current}
+      OPENSEARCH_BROWSE_INDEX_ALIAS: ${OPENSEARCH_BROWSE_INDEX_ALIAS:-judgments-current}
+      SEARCH_GATEWAY_TOKEN: ${SEARCH_GATEWAY_TOKEN:?SEARCH_GATEWAY_TOKEN is required}
+    ports:
+      - "127.0.0.1:7711:7711"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  opensearch-data:

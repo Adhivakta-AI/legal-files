@@ -1,5 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
+import { BrandMark } from "@/components/brand-mark"
 import { ReturnArrow, RigMark } from "./primitives"
 
 export function FinalCta() {
@@ -47,15 +48,9 @@ export function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div className="footer-brand">
-            <Link href="/" aria-label="Lex — Home">
-              <Image
-                className="footer-logo"
-                src="/assets/brand/rig-wordmark.svg"
-                alt="Lex"
-                width={60}
-                height={22}
-                style={{ width: "auto" }}
-              />
+            <Link href="/" className="footer-logo" aria-label="Lex — Home">
+              <BrandMark className="footer-logo-mark" />
+              <span>LEX</span>
             </Link>
             <p>
               The precedent engine for Indian law. Built for advocates who cite

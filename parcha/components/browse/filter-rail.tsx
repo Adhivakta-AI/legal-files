@@ -73,7 +73,7 @@ export function FilterRail() {
               className={styles.textInput}
               value={filters.q}
               onChange={(event) => patchFilters({ q: event.target.value })}
-              placeholder="Words in title / citation…"
+              placeholder="Words in judgment text, title or citation…"
             />
           </div>
 

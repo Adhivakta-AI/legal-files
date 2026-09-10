@@ -122,6 +122,7 @@ export async function retrieveChunks({
   yearFrom,
   yearTo,
   order = "relevance",
+  widenYearFilter = true,
   titleQuery,
   signal,
 }: {
@@ -132,6 +133,7 @@ export async function retrieveChunks({
   yearFrom?: number
   yearTo?: number
   order?: "relevance" | "recent"
+  widenYearFilter?: boolean
   titleQuery?: string
   signal?: AbortSignal
 }): Promise<{ chunks: SearchChunk[]; widened: boolean }> {
@@ -146,7 +148,7 @@ export async function retrieveChunks({
   })
   let widened = false
 
-  if (chunks.length === 0 && (yearFrom || yearTo)) {
+  if (widenYearFilter && chunks.length === 0 && (yearFrom || yearTo)) {
     chunks = await requestSearch({ query, limit, order, titleQuery, signal })
     widened = true
   }

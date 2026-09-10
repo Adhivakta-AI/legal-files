@@ -2968,9 +2968,27 @@ body {
   position: relative;
   width: 100%;
 }
-.site-logo img {
-  height: 22px;
-  filter: invert(1) brightness(2);
+.site-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--paper);
+  text-decoration: none;
+}
+.site-logo-mark {
+  width: 30px;
+  height: 30px;
+  color: var(--accent);
+  --brand-mark-cutout: var(--ink);
+  filter: drop-shadow(0 0 12px var(--accent-glow));
+}
+.site-logo span {
+  font-family:
+    Chivo Mono,
+    monospace;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
 }
 .site-nav-links {
   display: flex;
@@ -3001,8 +3019,11 @@ body {
   padding: 1.2rem;
   opacity: 1;
 }
-.site-header[data-variant="hero"] .site-logo img {
-  filter: brightness(0);
+.site-header[data-variant="hero"] .site-logo {
+  color: var(--ink);
+}
+.site-header[data-variant="hero"] .site-logo-mark {
+  --brand-mark-cutout: var(--paper);
 }
 .site-header[data-variant="hero"] .site-nav-links a {
   color: var(--ink);
@@ -3114,8 +3135,25 @@ footer {
   z-index: 2;
 }
 .footer-logo {
-  height: 18px;
-  filter: invert(1) brightness(2);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--paper);
+  text-decoration: none;
+}
+.footer-logo-mark {
+  width: 28px;
+  height: 28px;
+  color: var(--accent);
+  --brand-mark-cutout: #0a0a0a;
+}
+.footer-logo span {
+  font-family:
+    Chivo Mono,
+    monospace;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
 }
 .footer-brand p {
   color: var(--text-muted);

@@ -384,11 +384,13 @@ h6 {
 }
 
 .site-logo img,
+.site-logo-mark,
 .footer-logo {
   width: auto;
 }
 
-.footer-logo,
+.site-logo-mark,
+.footer-logo-mark,
 .faq-chevron svg {
   display: inline;
   vertical-align: baseline;

@@ -1,10 +1,10 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useRef } from "react"
 import { useGSAP } from "@gsap/react"
 import gsap from "gsap"
+import { BrandMark } from "@/components/brand-mark"
 import { useLandingUiStore } from "./store/landing-ui-store"
 
 export function Header() {
@@ -42,14 +42,8 @@ export function Header() {
     <header className="site-header" data-variant="hero" role="banner">
       <nav ref={navRef} className="site-nav" aria-label="Main navigation">
         <a href="#top" className="site-logo" aria-label="Lex — Home">
-          <Image
-            src="/assets/brand/lex-wordmark.svg"
-            alt=""
-            width={60}
-            height={22}
-            style={{ width: "auto" }}
-            priority
-          />
+          <BrandMark className="site-logo-mark" />
+          <span>LEX</span>
         </a>
         <button
           className="nav-toggle"

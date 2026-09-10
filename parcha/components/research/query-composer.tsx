@@ -8,6 +8,7 @@ import type { ResearchMode } from "@/lib/research/types"
 import { EXAMPLES } from "./lib/research-modes"
 import { ResearchModeIcon } from "./mode-select"
 import styles from "./research.module.css"
+import { SearchFilterDrawer } from "./search-filter-drawer"
 import { useResearchStore } from "./store/research-store"
 
 export function QueryComposer({ mode }: { mode: ResearchMode }) {
@@ -55,6 +56,7 @@ export function QueryComposer({ mode }: { mode: ResearchMode }) {
             </span>
             {mode === "search" ? "Search" : "AI Pro"}
           </div>
+          {mode === "search" ? <SearchFilterDrawer disabled={running} /> : null}
           <span className={styles.shortcut}>⌘ ENTER</span>
           <span className={styles.charCount}>{query.length}/3000</span>
           <button

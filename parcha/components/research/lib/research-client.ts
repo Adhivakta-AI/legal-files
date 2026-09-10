@@ -1,4 +1,8 @@
-import type { ResearchMode, ResearchStreamEvent } from "@/lib/research/types"
+import type {
+  ResearchMode,
+  ResearchStreamEvent,
+  SemanticSearchFilters,
+} from "@/lib/research/types"
 
 /**
  * POSTs a research query and parses the NDJSON event stream, invoking `onEvent`
@@ -8,18 +12,20 @@ import type { ResearchMode, ResearchStreamEvent } from "@/lib/research/types"
 export async function runResearchStream({
   query,
   mode,
+  filters,
   signal,
   onEvent,
 }: {
   query: string
   mode: ResearchMode
+  filters?: SemanticSearchFilters
   signal: AbortSignal
   onEvent: (event: ResearchStreamEvent) => void
 }): Promise<void> {
   const response = await fetch("/api/research", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ query, mode }),
+    body: JSON.stringify({ query, mode, ...(filters ?? {}) }),
     signal,
   })
 

@@ -4,6 +4,17 @@ Hybrid legal-judgment search using Workers AI, Vectorize, D1 FTS5, and the
 existing R2 bucket. Query embeddings use `@cf/baai/bge-small-en-v1.5` with
 `cls` pooling, matching the existing local FastEmbed vectors.
 
+When `OPENSEARCH_API_URL` and `OPENSEARCH_API_TOKEN` are configured, keyword
+candidates come from the authenticated OpenSearch gateway in `../opensearch`.
+Vectorize remains the semantic index, and the Worker fuses both lists with RRF.
+OpenSearch failures automatically fall back to D1 FTS5.
+
+When `OPENSEARCH_BROWSE_API_URL` is configured, non-empty Browse keyword
+queries use the judgment-level OpenSearch index. It searches full judgment
+text and metadata while preserving Browse filters, exact totals, pagination,
+sorting, and facets. Empty Browse queries and gateway failures continue to use
+D1.
+
 Explicit party-name and reported-citation queries use the `judgments_fts`
 metadata index first. Direct judgment matches are returned ahead of passage
 matches, preventing later judgments that merely cite the requested case from

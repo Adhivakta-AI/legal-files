@@ -1,0 +1,83 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "refresh_interval": "30s",
+    "index.max_result_window": 50000,
+    "analysis": {
+      "filter": {
+        "legal_english_stemmer": {
+          "type": "stemmer",
+          "language": "light_english"
+        }
+      },
+      "analyzer": {
+        "legal_exact": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding"]
+        },
+        "legal_stemmed": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding", "legal_english_stemmer"]
+        }
+      },
+      "normalizer": {
+        "folded_keyword": {
+          "type": "custom",
+          "filter": ["lowercase", "asciifolding"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "dynamic": "strict",
+    "_source": { "excludes": ["text"] },
+    "properties": {
+      "judgment_id": { "type": "keyword" },
+      "title": {
+        "type": "text",
+        "analyzer": "legal_exact",
+        "fields": { "sort": { "type": "keyword", "normalizer": "folded_keyword" } }
+      },
+      "petitioner": {
+        "type": "text",
+        "analyzer": "legal_exact",
+        "fields": { "exact": { "type": "keyword", "normalizer": "folded_keyword" } }
+      },
+      "respondent": {
+        "type": "text",
+        "analyzer": "legal_exact",
+        "fields": { "exact": { "type": "keyword", "normalizer": "folded_keyword" } }
+      },
+      "citation": {
+        "type": "text",
+        "analyzer": "legal_exact",
+        "fields": { "exact": { "type": "keyword", "normalizer": "folded_keyword" } }
+      },
+      "neutral_citation": {
+        "type": "text",
+        "analyzer": "legal_exact",
+        "fields": { "exact": { "type": "keyword", "normalizer": "folded_keyword" } }
+      },
+      "cnr": { "type": "keyword" },
+      "decision_date": { "type": "date", "format": "strict_date", "ignore_malformed": true },
+      "decision_year": { "type": "short" },
+      "disposal_nature": { "type": "keyword" },
+      "available_languages": { "type": "keyword" },
+      "era": { "type": "keyword" },
+      "bench_size": { "type": "short" },
+      "judges": { "type": "keyword" },
+      "court": { "type": "keyword" },
+      "batch_id": { "type": "keyword" },
+      "text": {
+        "type": "text",
+        "analyzer": "legal_exact",
+        "fields": {
+          "stemmed": { "type": "text", "analyzer": "legal_stemmed" }
+        }
+      }
+    }
+  }
+}

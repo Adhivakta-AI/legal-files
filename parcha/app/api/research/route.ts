@@ -1,10 +1,17 @@
 import { analyzeQuery, analyzeSearchQuery } from "@/lib/research/analyzer"
 import { getAuth } from "@/lib/auth"
+import {
+  getConversationContext,
+  persistResearchExchange,
+} from "@/lib/research/chat-storage"
 import { generateGroundedAnswer } from "@/lib/research/grounding"
-import { INVALID_QUERY_MESSAGE } from "@/lib/research/query-validation"
-import { retrieveChunks, retrieveJudgmentContexts } from "@/lib/research/search"
+import {
+  INVALID_QUERY_MESSAGE,
+  queryGateError,
+} from "@/lib/research/query-validation"
+import { retrieveChunks, retrieveLegalChunks } from "@/lib/research/search"
 import type {
-  JudgmentContext,
+  LegalSearchChunk,
   PipelineStage,
   QueryAnalysis,
   ResearchMode,
@@ -26,6 +33,9 @@ const HEADERS = {
   "x-content-type-options": "nosniff",
 }
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 function normalizedRequest(value: unknown): ResearchRequest {
   if (typeof value !== "object" || value === null)
     throw new Error("Request body must be an object")
@@ -36,6 +46,13 @@ function normalizedRequest(value: unknown): ResearchRequest {
     throw new Error("query must be between 3 and 3000 characters")
   }
   const mode: ResearchMode = body.mode === "search" ? "search" : "ai_pro"
+  const threadId =
+    body.thread_id === undefined
+      ? undefined
+      : typeof body.thread_id === "string" && UUID_PATTERN.test(body.thread_id)
+        ? body.thread_id
+        : null
+  if (threadId === null) throw new Error("thread_id must be a valid UUID")
   const limit =
     typeof body.limit === "number" &&
     Number.isInteger(body.limit) &&
@@ -66,6 +83,7 @@ function normalizedRequest(value: unknown): ResearchRequest {
   return {
     query,
     mode,
+    ...(mode === "ai_pro" && threadId ? { thread_id: threadId } : {}),
     ...(limit ? { limit } : {}),
     ...(yearFrom ? { year_from: yearFrom } : {}),
     ...(yearTo ? { year_to: yearTo } : {}),
@@ -92,6 +110,8 @@ function searchResult({
     answer: "",
     citations: cases.map((source) => ({
       judgment_id: source.judgment_id,
+      source_id: source.judgment_id,
+      source_type: "judgment",
       case_name: source.title,
       citation: source.citation ?? "Unreported",
       court: "Supreme Court of India",
@@ -144,6 +164,16 @@ export async function POST(request: Request): Promise<Response> {
     })
   )
 
+  const conversation = input.thread_id
+    ? await getConversationContext(session.user.id, input.thread_id)
+    : []
+  if (conversation === null) {
+    return Response.json(
+      { error: "Research conversation not found" },
+      { status: 404, headers: { "cache-control": "no-store" } }
+    )
+  }
+
   const encoder = new TextEncoder()
   let canceled = false
   const pipelineAbort = new AbortController()
@@ -193,7 +223,8 @@ export async function POST(request: Request): Promise<Response> {
               : await analyzeQuery(
                   input.query,
                   input.mode,
-                  pipelineAbort.signal
+                  pipelineAbort.signal,
+                  conversation
                 )
           const analysis: QueryAnalysis = input.sort
             ? { ...analyzedQuery, retrieval_order: input.sort }
@@ -220,14 +251,17 @@ export async function POST(request: Request): Promise<Response> {
             analysisMs
           )
           if (input.mode === "ai_pro" && !analysis.query_valid) {
+            const queryError =
+              queryGateError(input.query, conversation.length > 0) ??
+              INVALID_QUERY_MESSAGE
             stage(
               "context",
               "error",
               "A clearer legal query is required",
-              INVALID_QUERY_MESSAGE
+              queryError
             )
             emit({ type: "analysis", analysis })
-            throw new Error(INVALID_QUERY_MESSAGE)
+            throw new Error(queryError)
           }
           if (input.mode === "ai_pro") {
             stage("acronyms", "running", "Resolving Indian legal abbreviations")
@@ -260,42 +294,112 @@ export async function POST(request: Request): Promise<Response> {
           stage(
             "retrieval",
             "running",
-            "Searching 2.48M indexed judgment passages"
+            input.mode === "ai_pro"
+              ? "Searching primary law and 2.48M judgment passages"
+              : "Searching 2.48M indexed judgment passages"
           )
-          const { chunks, widened } = await retrieveChunks({
-            query: analysis.enriched_query,
-            originalQuery: analysis.corrected_query,
-            limit: input.limit ?? (input.mode === "search" ? 40 : 14),
-            maxPerJudgment: input.mode === "search" ? 1 : 2,
-            yearFrom: input.year_from,
-            yearTo: input.year_to,
-            order: analysis.retrieval_order,
-            widenYearFilter: !input.year_from && !input.year_to,
-            titleQuery: analysis.case_name_query ?? undefined,
-            signal: pipelineAbort.signal,
-          })
+          const judgmentRequest = () =>
+            retrieveChunks({
+              query: analysis.enriched_query,
+              originalQuery: analysis.corrected_query,
+              limit:
+                input.mode === "search"
+                  ? (input.limit ?? 40)
+                  : Math.min(input.limit ?? 10, 12),
+              maxPerJudgment: input.mode === "search" ? 1 : 2,
+              yearFrom: input.year_from,
+              yearTo: input.year_to,
+              order: analysis.retrieval_order,
+              widenYearFilter: !input.year_from && !input.year_to,
+              titleQuery: analysis.case_name_query ?? undefined,
+              signal: pipelineAbort.signal,
+            })
+          let chunks: SearchChunk[] = []
+          let legalChunks: LegalSearchChunk[] = []
+          let widened = false
+          if (input.mode === "ai_pro") {
+            const [judgmentResult, legalResult] = await Promise.allSettled([
+              judgmentRequest(),
+              retrieveLegalChunks({
+                query: analysis.enriched_query,
+                limit: Math.min(input.limit ?? 8, 10),
+                signal: pipelineAbort.signal,
+              }),
+            ])
+            if (judgmentResult.status === "fulfilled") {
+              chunks = judgmentResult.value.chunks
+              widened = judgmentResult.value.widened
+            } else {
+              console.warn(
+                JSON.stringify({
+                  event: "research.judgment_retrieval.fallback",
+                  request_id: requestId,
+                  message:
+                    judgmentResult.reason instanceof Error
+                      ? judgmentResult.reason.message
+                      : "Judgment retrieval unavailable",
+                })
+              )
+            }
+            if (legalResult.status === "fulfilled") {
+              legalChunks = legalResult.value
+            } else {
+              console.warn(
+                JSON.stringify({
+                  event: "research.legal_retrieval.fallback",
+                  request_id: requestId,
+                  message:
+                    legalResult.reason instanceof Error
+                      ? legalResult.reason.message
+                      : "Primary-law retrieval unavailable",
+                })
+              )
+            }
+            if (
+              judgmentResult.status === "rejected" &&
+              legalResult.status === "rejected"
+            ) {
+              throw new Error(
+                "Both legal and judgment retrieval are unavailable"
+              )
+            }
+          } else {
+            const result = await judgmentRequest()
+            chunks = result.chunks
+            widened = result.widened
+          }
           const retrievalMs = Math.round(performance.now() - retrievalStarted)
           const judgmentCount = new Set(
             chunks.map((chunk) => chunk.judgment_id)
           ).size
+          const legalUnitCount = new Set(
+            legalChunks.map((chunk) => chunk.unit_id)
+          ).size
           stage(
             "retrieval",
             "complete",
-            chunks.length
-              ? `${chunks.length} passages from ${judgmentCount} judgments ranked`
+            chunks.length || legalChunks.length
+              ? input.mode === "ai_pro"
+                ? `${legalUnitCount} provisions and ${judgmentCount} judgments ranked`
+                : `${chunks.length} passages from ${judgmentCount} judgments ranked`
               : "No grounded passages found",
-            widened
-              ? "Year filter widened after an empty first pass"
-              : analysis.case_name_query
-                ? "Cloudflare D1 title match · passage retrieval second"
-                : "Keyword index + Workers AI Vectorize · RRF fused",
+            input.mode === "ai_pro"
+              ? "Exact provision lookup + FTS5 + dual Vectorize indexes · RRF fused"
+              : widened
+                ? "Year filter widened after an empty first pass"
+                : analysis.case_name_query
+                  ? "Cloudflare D1 title match · passage retrieval second"
+                  : "Keyword index + Workers AI Vectorize · RRF fused",
             retrievalMs
           )
           emit({
             type: "sources",
-            count: chunks.length,
+            count: chunks.length + legalChunks.length,
             judgment_count: judgmentCount,
             chunks,
+            legal_count: legalChunks.length,
+            legal_unit_count: legalUnitCount,
+            legal_chunks: legalChunks,
           })
           console.info(
             JSON.stringify({
@@ -303,13 +407,15 @@ export async function POST(request: Request): Promise<Response> {
               request_id: requestId,
               passage_count: chunks.length,
               judgment_count: judgmentCount,
+              legal_chunk_count: legalChunks.length,
+              legal_unit_count: legalUnitCount,
               duration_ms: retrievalMs,
             })
           )
 
-          if (chunks.length === 0) {
+          if (chunks.length === 0 && legalChunks.length === 0) {
             throw new Error(
-              "The judgment index returned no relevant passages. Try a broader description, expand the date range, or remove a party-name spelling you are unsure about."
+              "The legal indexes returned no relevant provisions or judgments. Try a broader description or include the statute, section, article, or legal issue."
             )
           }
 
@@ -327,57 +433,17 @@ export async function POST(request: Request): Promise<Response> {
           }
 
           const generationStarted = performance.now()
-          const contextJudgmentIds = [
-            ...new Set(chunks.map((chunk) => chunk.judgment_id)),
-          ].slice(0, 5)
           stage(
             "generation",
             "running",
-            `Reading indexed judgment text for ${contextJudgmentIds.length} cases`
-          )
-          let judgmentContexts: JudgmentContext[] = []
-          try {
-            judgmentContexts = await retrieveJudgmentContexts({
-              judgmentIds: contextJudgmentIds,
-              signal: pipelineAbort.signal,
-            })
-            console.info(
-              JSON.stringify({
-                event: "research.context.complete",
-                request_id: requestId,
-                judgment_count: judgmentContexts.length,
-                chunk_count: judgmentContexts.reduce(
-                  (total, context) => total + context.chunks.length,
-                  0
-                ),
-                truncated_count: judgmentContexts.filter(
-                  (context) => context.truncated
-                ).length,
-              })
-            )
-          } catch (contextError) {
-            console.warn(
-              JSON.stringify({
-                event: "research.context.fallback",
-                request_id: requestId,
-                message:
-                  contextError instanceof Error
-                    ? contextError.message
-                    : "Indexed judgment context unavailable",
-              })
-            )
-          }
-          stage(
-            "generation",
-            "running",
-            "Explaining relevance from verified judgment text"
+            "Answering from ranked provisions and judgment passages"
           )
           const answer = await generateGroundedAnswer({
-            query: analysis.corrected_query,
+            query: analysis.resolved_query,
             mode: input.mode,
             analysis,
             chunks,
-            judgmentContexts,
+            legalChunks,
             signal: pipelineAbort.signal,
             onValidationFailure: (reason, attempt, final) => {
               console.warn(
@@ -417,7 +483,7 @@ export async function POST(request: Request): Promise<Response> {
               ? `${answer.citations.length} verified citation${answer.citations.length === 1 ? "" : "s"}`
               : `${answer.citations.length} retrieved source${answer.citations.length === 1 ? "" : "s"} ready for review`,
             answer.synthesis_status === "grounded"
-              ? `${answer.confidence.toUpperCase()} confidence`
+              ? `${answer.confidence.toUpperCase()} confidence · source grounding passed`
               : "Synthesis unavailable · indexed passages preserved",
             generationMs
           )
@@ -432,9 +498,17 @@ export async function POST(request: Request): Promise<Response> {
               judgment_count: judgmentCount,
               latency_ms: retrievalMs,
               widened,
+              legal_result_count: legalChunks.length,
+              legal_unit_count: legalUnitCount,
             },
           }
-          emit({ type: "result", result })
+          const thread = await persistResearchExchange({
+            userId: session.user.id,
+            threadId: input.thread_id,
+            query: input.query,
+            result,
+          })
+          emit({ type: "result", result, thread })
         } catch (error) {
           const message =
             error instanceof Error ? error.message : "Research pipeline failed"

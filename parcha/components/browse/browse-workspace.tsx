@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
 import type { ResearchUser } from "@/components/research/research-account-menu"
@@ -28,7 +28,6 @@ export function BrowseWorkspace({
   user: ResearchUser
   initialState: BrowseInitialState
 }) {
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   const replaceQuery = useBrowseStore((state) => state.replaceQuery)
@@ -54,11 +53,16 @@ export function BrowseWorkspace({
     if (key === syncedKey.current) return
     const timer = window.setTimeout(() => {
       syncedKey.current = key
-      router.replace(key ? `/browse?${key}` : "/browse", { scroll: false })
+      // This is a query-only state update. A router navigation would request a
+      // new Server Component payload and older navigations can arrive after a
+      // user has typed more text, causing the URL -> store effect to roll the
+      // controlled input back. Native history updates are synchronous and are
+      // integrated with useSearchParams by the App Router.
+      window.history.replaceState(null, "", key ? `/browse?${key}` : "/browse")
       void run()
     }, SYNC_DEBOUNCE_MS)
     return () => window.clearTimeout(timer)
-  }, [initialized, filters, page, router, run])
+  }, [initialized, filters, page, run])
 
   // URL -> store (browser back / forward)
   useEffect(() => {

@@ -14,6 +14,7 @@ export function PipelinePanel() {
   const stages = useResearchStore((state) => state.stages)
   const analysis = useResearchStore((state) => state.analysis)
   const sources = useResearchStore((state) => state.sources)
+  const legalSources = useResearchStore((state) => state.legalSources)
   const mode = useResearchStore((state) => state.mode)
   const resultMode = useResearchStore((state) => state.result?.mode)
 
@@ -44,8 +45,8 @@ export function PipelinePanel() {
         <AnalysisPanel analysis={analysis} mode={displayMode} />
       ) : null}
 
-      {sources.length ? (
-        <SourcesPanel sources={sources} />
+      {sources.length || legalSources.length ? (
+        <SourcesPanel sources={sources} legalSources={legalSources} />
       ) : (
         <div className={styles.pipelineEmpty}>
           <Clock3 size={16} />

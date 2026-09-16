@@ -132,6 +132,7 @@ export const useBrowseStore = create<BrowseState & BrowseActions>(
           )
         }
         const data = payload as BrowseResponse
+        if (activeController !== controller) return
         set({
           results: data.results,
           facets: data.facets ?? get().facets,

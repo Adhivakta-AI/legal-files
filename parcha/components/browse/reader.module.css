@@ -89,6 +89,90 @@
   color: var(--paper);
 }
 
+.viewSwitch {
+  display: inline-flex;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--surface-control);
+}
+
+.aiTabs {
+  display: inline-flex;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  background: var(--surface-control);
+}
+
+.aiTabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.42rem 0.62rem;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: var(--paper-45);
+  cursor: pointer;
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.57rem;
+  letter-spacing: 0.06em;
+}
+
+.aiTabs button:last-child {
+  border-right: 0;
+}
+
+.aiTabs button[data-active="true"] {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+
+.aiTabs button:hover {
+  color: var(--paper);
+}
+
+.viewSwitch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.42rem 0.62rem;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: var(--paper-45);
+  cursor: pointer;
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.57rem;
+  letter-spacing: 0.06em;
+}
+
+.viewSwitch button:last-child {
+  border-right: 0;
+}
+
+.viewSwitch button[data-active="true"] {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+
+.viewSwitch button:hover {
+  color: var(--paper);
+}
+
+.citationContext {
+  flex: 0 1 auto;
+  max-width: 15rem;
+  overflow: hidden;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .toolbarActions {
   display: flex;
   gap: 0.4rem;
@@ -152,6 +236,86 @@
   margin-bottom: 0.5rem;
 }
 
+.panelHeadingRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.verifiedBadge,
+.pageBadge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.25rem;
+  color: #4bd49b;
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.49rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.pageBadge {
+  color: var(--accent);
+}
+
+.topicList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.topicList li {
+  position: relative;
+  padding-left: 0.72rem;
+  color: var(--paper-75);
+  font-size: 0.79rem;
+  line-height: 1.4;
+}
+
+.topicList li::before {
+  position: absolute;
+  top: 0.48rem;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  content: "";
+}
+
+.provenanceNote {
+  margin: 0.65rem 0 0;
+  color: var(--paper-35);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.55rem;
+  line-height: 1.45;
+}
+
+.evidenceExcerpt {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.55rem;
+  max-height: 11rem;
+  overflow: auto;
+  padding: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--line));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  color: var(--accent);
+}
+
+.evidenceExcerpt p {
+  margin: 0;
+  color: var(--paper-70);
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
 .caseName {
   font-family: "Chalet", sans-serif;
   font-size: 1.05rem;
@@ -203,6 +367,28 @@
   color: var(--paper-80);
 }
 
+.checksum {
+  overflow-wrap: anywhere;
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.68rem !important;
+}
+
+.sourceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.85rem;
+  color: var(--accent);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.sourceLink:hover {
+  text-decoration: underline;
+}
+
 .coramList {
   display: flex;
   flex-direction: column;
@@ -233,6 +419,8 @@
 
 .viewer {
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   background: var(--viewer);
 }
 
@@ -269,5 +457,48 @@
 
   .toolbarTitle {
     display: none;
+  }
+
+  .citationContext {
+    display: none;
+  }
+
+  .viewSwitch button {
+    padding-inline: 0.5rem;
+  }
+
+  .viewSwitch svg {
+    display: none;
+  }
+
+  .aiTabs button {
+    padding-inline: 0.5rem;
+  }
+
+  .aiTabs svg {
+    display: none;
+  }
+}
+
+@media print {
+  .root {
+    position: static;
+    display: block;
+    background: #fff;
+  }
+
+  .toolbar,
+  .panel {
+    display: none !important;
+  }
+
+  .body,
+  .body[data-panel="closed"] {
+    display: block;
+  }
+
+  .viewer {
+    overflow: visible;
+    background: #fff;
   }
 }

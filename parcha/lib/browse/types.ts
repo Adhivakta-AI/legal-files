@@ -33,6 +33,7 @@ export interface JudgmentSummary {
   citation: string | null
   neutral_citation: string | null
   cnr: string | null
+  case_number: string | null
   court: string
   decision_date: string | null
   decision_year: number | null

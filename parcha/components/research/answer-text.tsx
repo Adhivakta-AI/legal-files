@@ -2,6 +2,7 @@ import { Fragment, type ReactNode } from "react"
 
 import type { Citation } from "@/lib/research/types"
 
+import { citationSourceId } from "./lib/format"
 import styles from "./research.module.css"
 
 export function AnswerText({
@@ -9,15 +10,17 @@ export function AnswerText({
   citations,
   streaming,
   onCitation,
+  className,
 }: {
   answer: string
   citations: Citation[]
   streaming: boolean
   onCitation: (citation: Citation) => void
+  className?: string
 }) {
   const citationMap = new Map(
     citations.map((citation, index) => [
-      citation.judgment_id,
+      citationSourceId(citation),
       { citation, index },
     ])
   )
@@ -59,7 +62,10 @@ export function AnswerText({
 
   const blocks = answer.split(/\n{2,}/).filter(Boolean)
   return (
-    <div className={styles.answerProse} aria-live="polite">
+    <div
+      className={`${styles.answerProse}${className ? ` ${className}` : ""}`}
+      aria-live="polite"
+    >
       {blocks.map((block, index) => {
         const lines = block.split("\n").filter(Boolean)
         if (

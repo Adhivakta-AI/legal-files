@@ -2,39 +2,62 @@
 
 This Next.js application is the browser-facing backend-for-frontend. It owns
 authentication and research orchestration; the separate `cloudflare/` Worker
-owns judgment retrieval and document storage.
+owns primary-law and judgment retrieval plus document storage.
 
 Production flow:
 
 `Browser → OpenNext app Worker → Gemini + search Worker → D1 / Vectorize / R2`
 
-Every submission is an independent research request; previous results are not
-sent back as conversational context. After passage retrieval, AI Pro requests
-bounded indexed text for the top five judgments and asks the model for a
-query-specific relevance explanation tied to an exact supporting chunk.
-Exceptionally long judgments are marked as truncated rather than being
-represented as completely read.
+AI Pro is a persistent, multi-turn legal chat. Threads and completed exchanges
+are stored per authenticated user in the app D1 database. A bounded recent
+transcript can resolve follow-ups, but it is explicitly treated as untrusted
+context rather than legal authority. Each turn performs fresh primary-law and
+judgment retrieval, then sends only top hybrid-ranked passages to the model. It
+does not fetch or read whole judgments before answering. Every statutory
+proposition and case citation is tied to an exact indexed chunk and PDF page.
 
 The research composer has two modes:
 
 - **Search** performs conservative spelling correction and sends the corrected
   query directly to the Cloudflare search Worker. It returns ranked cases and
   indexed passages without generating an AI memorandum.
-- **AI Pro** adds query analysis, bounded judgment-context retrieval, and a
-  citation-checked Gemini synthesis with query-specific relevance notes.
+- **AI Pro** adds context-aware query analysis, parallel primary-law and
+  judgment retrieval, a citation-checked Gemini synthesis, and persistent chat
+  threads with follow-up questions.
+
+AI Pro grounding is enforced after generation. Gemini returns bounded answer
+sections and the source IDs supporting each section. The server discards any
+section without an allow-listed source and inserts the inline markers itself;
+every marker maps to an exact indexed chunk and PDF page. It makes one corrected
+generation attempt before returning a retrieval-only source review, so
+unsupported draft text cannot leak to the user.
+
+Primary-law citations open inside `/legal/[documentId]`, not on the upstream
+government host. The reader streams the hash-verified original BNS, BNSS, or
+Constitution PDF from the private `lex` R2 bucket through an authenticated,
+byte-range-capable app route. D1 retains the official government record URL and
+SHA-256 digest as provenance, and the reader exposes that record separately for
+verification.
+
+The `evaluation/` directory defines the Phase 5 lawyer-review contract and a
+deterministic scorer for section accuracy, Recall@20, citation precision and
+entailment, temporal applicability, hallucinated authorities, insufficient
+facts, and IPC/BNS or CrPC/BNSS transitions. Draft seeds never count as gold.
 
 The active application and search path do not use Supabase. Application auth
-is stored in Cloudflare D1; judgment metadata and full-text indexes are in D1,
-embeddings are searched with Vectorize and Workers AI, and PDFs are stored in
-R2. The repository's legacy `backend/` PostgreSQL code is not called by this
-application.
+and AI Pro conversations are stored in the `parcha-app` Cloudflare D1 database;
+legal provisions, judgment metadata, and full-text indexes are in the separate
+retrieval D1 database. Separate Vectorize indexes hold primary-law and judgment
+embeddings, query vectors run through Workers AI, and judgment PDFs are stored
+in R2. The VPS OpenSearch service remains retrieval-only, and the repository's
+legacy `backend/` PostgreSQL code is not called by this application.
 
 ## Authentication
 
 Better Auth is mounted at `/api/auth/*` and stores users, accounts, revocable
-sessions, verification tokens, and rate limits in the dedicated `parcha-app` D1
-database bound as `AUTH_DB`. The committed migration is applied by Wrangler,
-never during request handling.
+sessions, verification tokens, rate limits, and user-owned AI Pro threads in
+the dedicated `parcha-app` D1 database bound as `AUTH_DB`. Committed migrations
+are applied by Wrangler, never during request handling.
 
 - Email/password signup requires verification and a 12–128 character password.
 - Google OAuth only links a verified, matching email to an already verified
@@ -45,6 +68,8 @@ never during request handling.
 - `/research` has an optimistic cookie check plus authoritative D1 validation.
 - `POST /api/research` independently validates the D1 session before any model
   or search work.
+- `/api/research/threads/*` authorizes every read and deletion against the
+  current session user; conversation IDs alone never grant access.
 
 ## Local setup
 

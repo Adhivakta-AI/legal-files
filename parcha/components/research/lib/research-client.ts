@@ -13,19 +13,26 @@ export async function runResearchStream({
   query,
   mode,
   filters,
+  threadId,
   signal,
   onEvent,
 }: {
   query: string
   mode: ResearchMode
   filters?: SemanticSearchFilters
+  threadId?: string
   signal: AbortSignal
   onEvent: (event: ResearchStreamEvent) => void
 }): Promise<void> {
   const response = await fetch("/api/research", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ query, mode, ...(filters ?? {}) }),
+    body: JSON.stringify({
+      query,
+      mode,
+      ...(filters ?? {}),
+      ...(threadId ? { thread_id: threadId } : {}),
+    }),
     signal,
   })
 

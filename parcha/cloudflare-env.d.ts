@@ -1,5 +1,7 @@
 interface CloudflareEnv {
   AUTH_DB: D1Database
+  LEGAL_DB: D1Database
+  DOCUMENTS: R2Bucket
   ASSETS: Fetcher
   BETTER_AUTH_SECRET?: string
   BETTER_AUTH_URL?: string
@@ -11,5 +13,6 @@ interface CloudflareEnv {
   GEMINI_MODEL?: string
   SEARCH_API_URL?: string
   SEARCH_SERVICE_TOKEN?: string
+  READING_COPY_PROTOTYPE?: string
   NEXT_PUBLIC_SITE_URL?: string
 }

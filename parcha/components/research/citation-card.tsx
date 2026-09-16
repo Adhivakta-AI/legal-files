@@ -8,7 +8,7 @@ import {
 
 import type { Citation, ResearchMode } from "@/lib/research/types"
 
-import { sourceToken } from "./lib/format"
+import { citationSourceId, citationSourceType, sourceToken } from "./lib/format"
 import styles from "./research.module.css"
 
 export function CitationCard({
@@ -19,6 +19,7 @@ export function CitationCard({
   expanded,
   onToggle,
   onOpen,
+  domId,
 }: {
   citation: Citation
   index: number
@@ -27,10 +28,13 @@ export function CitationCard({
   expanded: boolean
   onToggle: () => void
   onOpen: () => void
+  domId?: string
 }) {
+  const sourceId = citationSourceId(citation)
+  const sourceType = citationSourceType(citation)
   return (
     <article
-      id={`citation-${citation.judgment_id}`}
+      id={domId ?? `citation-${sourceId}`}
       className={styles.citationCard}
       data-open={expanded}
     >
@@ -55,18 +59,37 @@ export function CitationCard({
         </span>
         <span className={styles.verifiedBadge}>
           {mode === "search" ? <Search size={12} /> : <ShieldCheck size={12} />}
-          {mode === "search" ? "RELEVANT MATCH" : "VERIFIED CITATION"}
+          {mode === "search"
+            ? "RELEVANT MATCH"
+            : sourceType === "legislation"
+              ? "PRIMARY LAW"
+              : "VERIFIED CITATION"}
         </span>
         <ChevronDown size={16} className={styles.citationChevron} />
       </button>
       {expanded ? (
         <div className={styles.citationDetails}>
           <div className={styles.citationCoordinates}>
-            <span>JUDGMENT {sourceToken(citation.judgment_id)}</span>
+            <span>
+              {sourceType === "legislation" ? "PROVISION" : "JUDGMENT"}{" "}
+              {sourceToken(
+                sourceType === "judgment"
+                  ? (citation.judgment_id ?? sourceId)
+                  : (citation.unit_id ?? sourceId)
+              )}
+            </span>
+            {sourceType === "legislation" && citation.unit_kind ? (
+              <span>
+                {citation.unit_kind.replaceAll("_", " ").toUpperCase()}{" "}
+                {citation.unit_number}
+              </span>
+            ) : null}
             {citation.chunk_id ? (
               <span>CHUNK {sourceToken(citation.chunk_id)}</span>
             ) : null}
-            <span>PARA {citation.paragraph_number ?? "—"}</span>
+            {sourceType === "judgment" ? (
+              <span>PARA {citation.paragraph_number ?? "—"}</span>
+            ) : null}
             <span>PDF PAGE {citation.pdf_page}</span>
           </div>
           {citation.excerpt ? (
@@ -77,7 +100,10 @@ export function CitationCard({
           ) : null}
           {showRelevance ? (
             <div className={styles.relevanceReason}>
-              <span>WHY THIS CASE MATTERS</span>
+              <span>
+                WHY THIS {sourceType === "legislation" ? "PROVISION" : "CASE"}{" "}
+                MATTERS
+              </span>
               <p>{citation.relevance_note}</p>
             </div>
           ) : null}
@@ -86,7 +112,11 @@ export function CitationCard({
             className={styles.openPdfButton}
             onClick={onOpen}
           >
-            <FileText size={15} /> Open source PDF <ArrowRight size={15} />
+            <FileText size={15} />
+            {sourceType === "legislation"
+              ? "Open official source"
+              : "Open source PDF"}
+            <ArrowRight size={15} />
           </button>
         </div>
       ) : null}

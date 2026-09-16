@@ -1,0 +1,306 @@
+.root {
+  height: 100%;
+  overflow-y: auto;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 5%, transparent),
+      transparent 18rem
+    ),
+    var(--ink);
+  color: var(--paper);
+}
+
+.header,
+.content,
+.footer {
+  width: min(900px, calc(100% - 3rem));
+  margin-inline: auto;
+}
+
+.header {
+  padding: 3.25rem 0 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.eyebrow,
+.coverage,
+.sources,
+.timelineCard time,
+.footer {
+  font-family: "Chivo Mono", monospace;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--accent);
+  font-size: 0.64rem;
+  letter-spacing: 0.13em;
+}
+
+.header h1 {
+  margin: 0.65rem 0 1rem;
+  font-family: "Chalet", sans-serif;
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.coverage {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--paper-40);
+  font-size: 0.58rem;
+  letter-spacing: 0.05em;
+}
+
+.coverage span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #4bd49b;
+}
+
+.coverageWarning {
+  margin: 1rem 0 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(245, 178, 66, 0.3);
+  color: #e7b75f;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem 0 3rem;
+}
+
+.section {
+  padding: 1.35rem 1.45rem;
+  border: 1px solid var(--line);
+  background: var(--surface-panel);
+}
+
+.section h2 {
+  margin: 0 0 0.85rem;
+  color: var(--paper-55);
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.overview,
+.outcome {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-panel));
+}
+
+.overview > p,
+.outcome > p {
+  margin: 0;
+  font-family: "Chalet", sans-serif;
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+
+.pointList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.point {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.point::before {
+  position: absolute;
+  top: 0.65rem;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  content: "";
+}
+
+.point p,
+.timelineCard p {
+  margin: 0;
+  color: var(--paper-80);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.65rem;
+}
+
+.sources button,
+.retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  padding: 0.3rem 0.48rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  color: var(--accent);
+  cursor: pointer;
+  font-family: "Chivo Mono", monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.07em;
+}
+
+.sources button:hover,
+.retry:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 13%, transparent);
+}
+
+.timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timeline > li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.2rem minmax(0, 1fr);
+  gap: 0.85rem;
+  padding-bottom: 1rem;
+}
+
+.timeline > li:not(:last-child)::before {
+  position: absolute;
+  top: 0.72rem;
+  bottom: -0.72rem;
+  left: 0.3rem;
+  width: 1px;
+  background: color-mix(in srgb, var(--accent) 35%, var(--line));
+  content: "";
+}
+
+.timelineMarker {
+  z-index: 1;
+  width: 0.65rem;
+  height: 0.65rem;
+  margin-top: 0.42rem;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.timelineCard {
+  padding: 1.15rem 1.25rem;
+  border: 1px solid var(--line);
+  background: var(--surface-panel);
+}
+
+.timelineCard time {
+  color: var(--accent);
+  font-size: 0.64rem;
+  letter-spacing: 0.09em;
+}
+
+.timelineCard h2 {
+  margin: 0.45rem 0 0.55rem;
+  font-family: "Chalet", sans-serif;
+  font-size: 1.02rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.state {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: var(--paper-45);
+}
+
+.state strong {
+  margin-top: 0.85rem;
+  color: var(--paper);
+  font-family: "Chalet", sans-serif;
+  font-size: 1rem;
+}
+
+.state p {
+  max-width: 31rem;
+  margin: 0.55rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.retry {
+  margin-top: 1rem;
+}
+
+.spinner {
+  color: var(--accent);
+  animation: spin 0.9s linear infinite;
+}
+
+.emptyTimeline {
+  padding: 2rem;
+  border: 1px dashed var(--line);
+  color: var(--paper-45);
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.footer {
+  padding: 1rem 0 2rem;
+  color: var(--paper-35);
+  font-size: 0.55rem;
+  line-height: 1.5;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 700px) {
+  .header,
+  .content,
+  .footer {
+    width: min(100% - 1.5rem, 900px);
+  }
+
+  .header {
+    padding-top: 2rem;
+  }
+
+  .section,
+  .timelineCard {
+    padding: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

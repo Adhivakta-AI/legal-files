@@ -2,7 +2,7 @@ import "server-only"
 
 import { requiredServerSetting, serverSetting } from "@/lib/server-env"
 
-import type { JudgmentContext, SearchChunk } from "./types"
+import type { JudgmentContext, LegalSearchChunk, SearchChunk } from "./types"
 
 const DEFAULT_SEARCH_API =
   "https://parcha-search-api.politestranger18.workers.dev/api/search"
@@ -21,11 +21,39 @@ function searchApiUrl(): string {
   return url.toString()
 }
 
-function searchServiceUrl(pathname: "/api/search" | "/api/context"): string {
+function searchServiceUrl(
+  pathname: "/api/search" | "/api/context" | "/api/legal-search"
+): string {
   const url = new URL(searchApiUrl())
   url.pathname = pathname
   url.search = ""
   return url.toString()
+}
+
+function isLegalSearchChunk(value: unknown): value is LegalSearchChunk {
+  if (typeof value !== "object" || value === null) return false
+  const chunk = value as Partial<LegalSearchChunk>
+  return (
+    typeof chunk.chunk_id === "string" &&
+    typeof chunk.document_id === "string" &&
+    typeof chunk.unit_id === "string" &&
+    typeof chunk.document_title === "string" &&
+    typeof chunk.short_title === "string" &&
+    (chunk.source_kind === "statute" || chunk.source_kind === "constitution") &&
+    (chunk.unit_kind === "preamble" ||
+      chunk.unit_kind === "article" ||
+      chunk.unit_kind === "section" ||
+      chunk.unit_kind === "schedule_page") &&
+    typeof chunk.unit_number === "string" &&
+    typeof chunk.heading === "string" &&
+    typeof chunk.part_index === "number" &&
+    typeof chunk.chunk_text === "string" &&
+    typeof chunk.source_url === "string" &&
+    typeof chunk.canonical_url === "string" &&
+    typeof chunk.authority === "string" &&
+    typeof chunk.rrf_score === "number" &&
+    typeof chunk.direct_match === "boolean"
+  )
 }
 
 function isSearchChunk(value: unknown): value is SearchChunk {
@@ -236,4 +264,51 @@ export async function retrieveJudgmentContexts({
     throw new Error("Search context API returned an invalid context set")
   }
   return payload.contexts.filter(isJudgmentContext)
+}
+
+export async function retrieveLegalChunks({
+  query,
+  limit = 12,
+  signal,
+}: {
+  query: string
+  limit?: number
+  signal?: AbortSignal
+}): Promise<LegalSearchChunk[]> {
+  const startedAt = performance.now()
+  const response = await fetch(searchServiceUrl("/api/legal-search"), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${requiredServerSetting("SEARCH_SERVICE_TOKEN")}`,
+    },
+    body: JSON.stringify({ query, limit }),
+    signal: signal
+      ? AbortSignal.any([signal, AbortSignal.timeout(30_000)])
+      : AbortSignal.timeout(30_000),
+    cache: "no-store",
+  })
+  const payload = (await response.json().catch(() => ({}))) as {
+    results?: unknown
+    error?: unknown
+  }
+  console.info(
+    JSON.stringify({
+      event: "search_service.response",
+      operation: "legal_search",
+      status: response.status,
+      duration_ms: Math.round(performance.now() - startedAt),
+    })
+  )
+  if (!response.ok) {
+    const message =
+      typeof payload.error === "string"
+        ? payload.error
+        : "Legal search request failed"
+    throw new Error(`Legal search API returned ${response.status}: ${message}`)
+  }
+  if (!Array.isArray(payload.results)) {
+    throw new Error("Legal search API returned an invalid result set")
+  }
+  return payload.results.filter(isLegalSearchChunk).slice(0, limit)
 }

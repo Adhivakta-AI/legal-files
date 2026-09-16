@@ -7,6 +7,7 @@ import type { Citation } from "@/lib/research/types"
 import { ResearchRunSkeleton } from "../loading/page-skeletons"
 import { AnswerText } from "./answer-text"
 import { CitationList } from "./citation-list"
+import { citationSourceId } from "./lib/format"
 import styles from "./research.module.css"
 import { useHistoryStore } from "./store/history-store"
 import { useResearchStore } from "./store/research-store"
@@ -37,10 +38,11 @@ export function AnswerPanel() {
   }
 
   const focusCitation = (citation: Citation) => {
-    setExpandedCitation(citation.judgment_id)
+    const sourceId = citationSourceId(citation)
+    setExpandedCitation(sourceId)
     window.requestAnimationFrame(() => {
       document
-        .getElementById(`citation-${citation.judgment_id}`)
+        .getElementById(`citation-${sourceId}`)
         ?.scrollIntoView({ behavior: "smooth", block: "center" })
     })
   }
@@ -57,8 +59,8 @@ export function AnswerPanel() {
           <h2>
             {query}
             {/* {displayMode === "search" */}
-              {/* ? "Relevant cases" */}
-              {/* : "Research memorandum"} */}
+            {/* ? "Relevant cases" */}
+            {/* : "Research memorandum"} */}
           </h2>
         </div>
         {result ? (
@@ -137,7 +139,7 @@ export function AnswerPanel() {
         <p className={styles.disclaimer}>
           {displayMode === "search"
             ? "Results are ranked from indexed passages. Review the linked judgment PDFs before relying on any proposition."
-            : "Lex Archives provides research assistance, not legal advice. Verify propositions against the linked judgment PDFs."}
+            : "Lex Archives provides research assistance, not legal advice. Verify propositions against the linked legislation and judgment PDFs."}
         </p>
       ) : null}
     </section>

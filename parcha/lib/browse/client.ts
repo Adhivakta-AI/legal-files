@@ -39,6 +39,7 @@ function toSummary(value: unknown): JudgmentSummary | null {
     neutral_citation:
       typeof row.neutral_citation === "string" ? row.neutral_citation : null,
     cnr: typeof row.cnr === "string" ? row.cnr : null,
+    case_number: typeof row.case_number === "string" ? row.case_number : null,
     court: typeof row.court === "string" ? row.court : "Supreme Court of India",
     decision_date:
       typeof row.decision_date === "string" ? row.decision_date : null,

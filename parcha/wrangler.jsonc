@@ -6,21 +6,28 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
   "d1_databases": [
     {
       "binding": "AUTH_DB",
       "database_name": "parcha-app",
       "database_id": "b1083802-55e4-450a-861f-4641868fa8bf",
-      "migrations_dir": "migrations"
-    }
+      "migrations_dir": "migrations",
+    },
+    {
+      "binding": "LEGAL_DB",
+      "database_name": "parcha-judgments",
+      "database_id": "de7ed05f-e25c-467a-9f80-106d0e0e5acf",
+      "migrations_dir": "../cloudflare/migrations",
+    },
   ],
+  "r2_buckets": [{ "binding": "DOCUMENTS", "bucket_name": "lex" }],
   "vars": {
     "BETTER_AUTH_URL": "https://lex-archives-app.politestranger18.workers.dev",
-    "NEXT_PUBLIC_SITE_URL": "https://lex-archives-app.politestranger18.workers.dev"
-  }
+    "NEXT_PUBLIC_SITE_URL": "https://lex-archives-app.politestranger18.workers.dev",
+  },
 }

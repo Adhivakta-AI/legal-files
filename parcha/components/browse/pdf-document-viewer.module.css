@@ -1,0 +1,339 @@
+.root {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 50% -20%,
+      rgba(76, 109, 165, 0.18),
+      transparent 42%
+    ),
+    var(--viewer);
+}
+
+.controls,
+.searchBar,
+.citationNotice {
+  z-index: 5;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface-chrome) 94%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.controls {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.35rem 0.75rem;
+}
+
+.controlGroup {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-control);
+}
+
+.controls button,
+.searchBar button {
+  display: grid;
+  min-width: 34px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-right: 1px solid var(--line-soft);
+  background: transparent;
+  color: var(--paper-60);
+  cursor: pointer;
+}
+
+.controls button:last-child,
+.searchBar button:last-child {
+  border-right: 0;
+}
+
+.controls button:hover:not(:disabled),
+.controls button[data-active="true"],
+.searchBar button:hover:not(:disabled) {
+  background: var(--paper-06);
+  color: var(--paper);
+}
+
+.controls button:disabled,
+.searchBar button:disabled {
+  cursor: default;
+  opacity: 0.28;
+}
+
+.zoomValue {
+  min-width: 52px !important;
+  padding: 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+}
+
+.pageControl {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0 0.55rem;
+  border-right: 1px solid var(--line-soft);
+  color: var(--paper-40);
+  font-family: var(--font-mono);
+  font-size: 0.57rem;
+  letter-spacing: 0.08em;
+}
+
+.pageControl input {
+  width: 36px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  outline: 0;
+  background: transparent;
+  color: var(--paper);
+  font: inherit;
+  text-align: center;
+  appearance: textfield;
+}
+
+.pageControl input::-webkit-inner-spin-button {
+  appearance: none;
+}
+
+.pageControl b {
+  min-width: 32px;
+  color: var(--paper-45);
+  font-weight: 400;
+}
+
+.searchBar {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.35rem max(1rem, calc((100% - 720px) / 2));
+  color: var(--paper-45);
+}
+
+.searchBar input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--paper);
+  font-size: 0.82rem;
+}
+
+.searchStatus {
+  color: var(--paper-40);
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+}
+
+.citationNotice {
+  display: flex;
+  min-height: 35px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.35rem 1rem;
+  color: #ffc928;
+  font-size: 0.72rem;
+}
+
+.citationNotice[data-located="true"] {
+  color: #4bd49b;
+}
+
+.citationNotice b {
+  font-family: var(--font-mono);
+  font-size: 0.59rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scroller {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--paper-20) transparent;
+}
+
+.pageStage {
+  display: flex;
+  min-width: max-content;
+  min-height: 100%;
+  align-items: center;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 2rem 2rem 3rem;
+}
+
+.paper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.22),
+    0 22px 70px rgba(0, 0, 0, 0.38);
+}
+
+.paper canvas {
+  display: block;
+}
+
+.textLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: clip;
+  line-height: 1;
+  text-align: initial;
+  transform-origin: 0 0;
+  caret-color: transparent;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+
+.textLayer :global(span),
+.textLayer :global(br) {
+  position: absolute;
+  color: transparent;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0 0;
+  user-select: text;
+}
+
+.textLayer > :global(span) {
+  z-index: 1;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x))
+    scale(var(--min-font-size-inv));
+}
+
+.textLayer :global(.markedContent) {
+  display: contents;
+}
+
+.textLayer :global(::selection) {
+  background: rgba(20, 99, 255, 0.34);
+}
+
+.citationHighlight {
+  margin: -2px;
+  padding: 2px;
+  border-radius: 3px;
+  background: rgba(255, 205, 30, 0.42) !important;
+  box-shadow: 0 0 0 1px rgba(255, 192, 0, 0.22);
+  animation: citationPulse 1.6s ease-out 1;
+}
+
+.searchHighlight {
+  margin: -1px;
+  padding: 1px;
+  border-radius: 2px;
+  background: rgba(36, 119, 255, 0.32) !important;
+}
+
+.rendering {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.72);
+  color: #20252d;
+  backdrop-filter: blur(2px);
+}
+
+.pageCaption {
+  margin-top: 0.8rem;
+  color: var(--paper-35);
+  font-family: var(--font-mono);
+  font-size: 0.57rem;
+  letter-spacing: 0.12em;
+}
+
+.stateCard {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 2rem;
+  color: var(--paper-45);
+  text-align: center;
+}
+
+.stateCard strong {
+  color: var(--paper-75);
+  font-size: 0.85rem;
+}
+
+.stateCard span {
+  max-width: 32rem;
+  font-size: 0.76rem;
+}
+
+.spinner {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes citationPulse {
+  0% {
+    background: rgba(255, 205, 30, 0.9);
+    box-shadow: 0 0 0 7px rgba(255, 205, 30, 0.2);
+  }
+  100% {
+    background: rgba(255, 205, 30, 0.42);
+    box-shadow: 0 0 0 1px rgba(255, 192, 0, 0.22);
+  }
+}
+
+@media (max-width: 720px) {
+  .controls {
+    justify-content: space-between;
+    gap: 0.3rem;
+    overflow-x: auto;
+  }
+
+  .pageControl span,
+  .zoomValue {
+    display: none !important;
+  }
+
+  .pageStage {
+    padding: 1rem 0.65rem 2rem;
+  }
+
+  .citationNotice {
+    justify-content: flex-start;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

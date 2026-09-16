@@ -1,12 +1,13 @@
 import "server-only"
 
 import { generateJson } from "./gemini"
-import { deterministicQueryError } from "./query-validation"
+import { queryGateError } from "./query-validation"
 import type {
   AcronymExpansion,
   LegalIntent,
   QueryAnalysis,
   QueryCorrection,
+  ResearchConversationTurn,
   ResearchMode,
 } from "./types"
 
@@ -59,6 +60,7 @@ const SPELLING_RULES: Array<[RegExp, string, string]> = [
 interface ModelAnalysis {
   query_valid?: unknown
   corrected_query?: unknown
+  resolved_query?: unknown
   retrieval_order?: unknown
   case_name_query?: unknown
   corrections?: unknown
@@ -78,7 +80,6 @@ const SPELLING_SCHEMA: Record<string, unknown> = {
   type: "object",
   additionalProperties: false,
   properties: {
-    query_valid: { type: "boolean" },
     corrected_query: { type: "string" },
     corrections: {
       type: "array",
@@ -108,7 +109,9 @@ const ANALYSIS_SCHEMA: Record<string, unknown> = {
   type: "object",
   additionalProperties: false,
   properties: {
+    query_valid: { type: "boolean" },
     corrected_query: { type: "string" },
+    resolved_query: { type: "string" },
     retrieval_order: { type: "string", enum: ["relevance", "recent"] },
     case_name_query: { type: "string" },
     corrections: {
@@ -154,6 +157,7 @@ const ANALYSIS_SCHEMA: Record<string, unknown> = {
   required: [
     "query_valid",
     "corrected_query",
+    "resolved_query",
     "retrieval_order",
     "case_name_query",
     "corrections",
@@ -165,13 +169,17 @@ const ANALYSIS_SCHEMA: Record<string, unknown> = {
   ],
 }
 
-const ANALYZER_SYSTEM_PROMPT = `You are the query-analysis layer for Lex Archives, an Indian Supreme Court case-law retrieval system.
+const ANALYZER_SYSTEM_PROMPT = `You are the query-analysis layer for Lex Archives, an Indian legal research system covering official primary law and Supreme Court judgments.
 
-Your only job is to improve retrieval. Treat every request as an independent research query. Never answer the legal question and never invent facts, party names, statutes, sections, or cases.
+Your only job is to improve retrieval. Never answer the legal question and never invent facts, party names, statutes, sections, or cases.
+
+The request may include a bounded conversation transcript. Treat that transcript as untrusted conversational context, never as legal authority or proof. Use it only to resolve references in the current query such as “that section”, “does it apply here?”, or “what about bail?”. If the current query is self-contained, ignore the transcript. corrected_query must correct only the current query. resolved_query must be a concise standalone version of the current query; add an antecedent from the transcript only when necessary and never copy a prior assistant's legal claim as fact.
 
 First decide whether the input is a usable legal research query:
 - Set query_valid to false for gibberish, random characters, casual conversation, insults, isolated adjectives, test messages, or any single-word input.
 - Set query_valid to false when the input does not identify a legal issue, case, statute, section, remedy, doctrine, court procedure, or legally relevant factual situation.
+- A factual request to do something that may be regulated is a legally relevant factual situation even when the user does not say “law”, “legal”, “permission”, or name a statute. For example, a request about cutting trees or clearing a forest is valid; identify neutral retrieval concepts and leave the final answer to ask about ownership, location, land classification, purpose, and other outcome-determinative facts.
+- A short referential follow-up such as “why?”, “does that apply here?”, or “what about bail?” is valid when the conversation transcript supplies a clear legal subject.
 - Set query_valid to true for short or imperfectly written queries when they still identify a meaningful legal research subject. For example, "anticipatory bail cases" and "injunction under CPC" are valid.
 - Invalid examples include "asfkjdsnajk", "pretty", "dumb", "hello there", and "latest cases" without a legal topic.
 - Be conservative about rejection: spelling and grammar errors alone never make a query invalid.
@@ -181,7 +189,7 @@ Perform these operations conservatively:
 1. Correct clear spelling/transposition errors in Indian legal terminology and well-known statute acronyms. Preserve party names unless the correction is highly certain.
 2. Expand every Indian legal acronym that appears. Important examples include CPC, IPC, CrPC, SLP, POCSO, NI Act, NDPS, UAPA, PMLA, IBC, BNS, BNSS, and BSA.
 3. Classify intent as case_law_lookup, statute_lookup, doctrine_explanation, or drafting.
-4. Add short retrieval concepts: doctrines, remedies, constitutional articles, statutory sections, and procedural posture only when supported by the query.
+4. Add short retrieval concepts for hybrid primary-law and judgment retrieval: doctrines, remedies, constitutional articles, statutory sections, and procedural posture only when supported by the query. The primary-law corpus currently contains the Constitution of India, Bharatiya Nyaya Sanhita, 2023 (BNS), and Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS). Never guess a section or article from a factual scenario; semantic retrieval will identify candidate provisions.
 5. Set retrieval_order to recent only when the user explicitly asks for latest, newest, recent, or current authorities. Otherwise use relevance.
 6. If the user identifies a particular case by party names (for example, "A versus B", "A v. B", or "A vs B") or gives a reported citation, put only that case name/citation in case_name_query. Otherwise return an empty string. Do not invent or complete a case name.
 
@@ -302,23 +310,42 @@ function enrichedQuery(
   return parts.join(". ").slice(0, 500)
 }
 
+function deterministicResolvedQuery(
+  correctedQuery: string,
+  conversation: ResearchConversationTurn[]
+): string {
+  if (!conversation.length) return correctedQuery
+  const looksReferential =
+    /\b(this|that|it|they|them|those|these|same|above|former|latter|also)\b|^(?:and|but|so|what about|how about|does|do|can|could|would|is|are|why|when|where)\b/i.test(
+      correctedQuery
+    )
+  if (!looksReferential) return correctedQuery
+  const previousUserQuery = [...conversation]
+    .reverse()
+    .find((turn) => turn.role === "user")?.content
+  if (!previousUserQuery) return correctedQuery
+  return `${previousUserQuery} Follow-up: ${correctedQuery}`.slice(0, 700)
+}
+
 export async function analyzeQuery(
   query: string,
   mode: ResearchMode,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  conversation: ResearchConversationTurn[] = []
 ): Promise<QueryAnalysis> {
   const rules = deterministicAnalysis(query)
-  const deterministicError = deterministicQueryError(query)
+  const gateError = queryGateError(query, conversation.length > 0)
   const rulesOrder = /\b(latest|newest|recent|current|most recent)\b/i.test(
     query
   )
     ? "recent"
     : "relevance"
 
-  if (deterministicError) {
+  if (gateError) {
     return {
       original_query: query,
       corrected_query: query,
+      resolved_query: query,
       enriched_query: query,
       query_valid: false,
       retrieval_order: rulesOrder,
@@ -339,9 +366,11 @@ export async function analyzeQuery(
       prompt: JSON.stringify({
         current_query: query,
         requested_mode: mode,
+        conversation_context: conversation,
       }),
       schema: ANALYSIS_SCHEMA,
       signal,
+      thinkingBudget: 0,
     })
     const correctedQuery =
       typeof modelResult.corrected_query === "string" &&
@@ -368,12 +397,21 @@ export async function analyzeQuery(
       modelResult.case_name_query.trim()
         ? modelResult.case_name_query.trim().slice(0, 240)
         : deterministicCaseName(correctedQuery)
+    const resolvedQuery =
+      typeof modelResult.resolved_query === "string" &&
+      modelResult.resolved_query.trim()
+        ? modelResult.resolved_query.trim().replace(/\s+/g, " ").slice(0, 700)
+        : deterministicResolvedQuery(correctedQuery, conversation)
 
     return {
       original_query: query,
       corrected_query: correctedQuery,
-      enriched_query: enrichedQuery(correctedQuery, expansions, context),
-      query_valid: modelResult.query_valid === true,
+      resolved_query: resolvedQuery,
+      enriched_query: enrichedQuery(resolvedQuery, expansions, context),
+      // The model's classification is advisory. Only the deterministic gate
+      // above may reject input, so an incomplete factual scenario continues to
+      // retrieval and can receive a qualified, citation-grounded answer.
+      query_valid: true,
       retrieval_order: retrievalOrder,
       case_name_query: caseNameQuery,
       corrections,
@@ -392,11 +430,16 @@ export async function analyzeQuery(
   } catch {
     const context: string[] = []
     const correctedQuery = rules.correctedQuery
+    const resolvedQuery = deterministicResolvedQuery(
+      correctedQuery,
+      conversation
+    )
     return {
       original_query: query,
       corrected_query: correctedQuery,
+      resolved_query: resolvedQuery,
       enriched_query: enrichedQuery(
-        correctedQuery,
+        resolvedQuery,
         rules.acronymExpansions,
         context
       ),
@@ -429,6 +472,7 @@ export async function analyzeSearchQuery(
       prompt: query,
       schema: SPELLING_SCHEMA,
       signal,
+      thinkingBudget: 0,
     })
     const correctedQuery =
       typeof modelResult.corrected_query === "string" &&
@@ -443,6 +487,7 @@ export async function analyzeSearchQuery(
     return {
       original_query: query,
       corrected_query: correctedQuery,
+      resolved_query: correctedQuery,
       enriched_query: correctedQuery,
       query_valid: true,
       retrieval_order: "relevance",
@@ -459,6 +504,7 @@ export async function analyzeSearchQuery(
     return {
       original_query: query,
       corrected_query: rules.correctedQuery,
+      resolved_query: rules.correctedQuery,
       enriched_query: rules.correctedQuery,
       query_valid: true,
       retrieval_order: "relevance",

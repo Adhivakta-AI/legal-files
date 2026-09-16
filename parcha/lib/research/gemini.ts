@@ -14,12 +14,30 @@ export class GeminiRequestError extends Error {
   }
 }
 
+export class GeminiStructuredOutputError extends Error {
+  constructor(
+    message: string,
+    readonly reason: "empty" | "max_tokens" | "malformed",
+    readonly finishReason?: string
+  ) {
+    super(message)
+    this.name = "GeminiStructuredOutputError"
+  }
+}
+
 interface GeminiResponse {
   candidates?: Array<{
     content?: { parts?: Array<{ text?: string }> }
     finishReason?: string
+    finishMessage?: string
   }>
   promptFeedback?: { blockReason?: string }
+  usageMetadata?: {
+    promptTokenCount?: number
+    candidatesTokenCount?: number
+    thoughtsTokenCount?: number
+    totalTokenCount?: number
+  }
 }
 
 function apiKey(): string {
@@ -139,6 +157,7 @@ export async function generateJson<T>({
   timeoutMs = 10_000,
   maxOutputTokens = 2048,
   temperature = 0.1,
+  thinkingBudget,
 }: {
   systemInstruction: string
   prompt: string
@@ -147,6 +166,7 @@ export async function generateJson<T>({
   timeoutMs?: number
   maxOutputTokens?: number
   temperature?: number
+  thinkingBudget?: number
 }): Promise<T> {
   const response = await geminiFetch(
     `${GEMINI_BASE_URL}/models/${model()}:generateContent`,
@@ -162,6 +182,9 @@ export async function generateJson<T>({
         generationConfig: {
           temperature,
           maxOutputTokens,
+          ...(thinkingBudget === undefined
+            ? {}
+            : { thinkingConfig: { thinkingBudget } }),
           responseMimeType: "application/json",
           responseJsonSchema: schema,
         },
@@ -173,9 +196,42 @@ export async function generateJson<T>({
   )
 
   const payload = (await response.json()) as GeminiResponse
+  const candidate = payload.candidates?.[0]
+  const finishReason = candidate?.finishReason
+  console.info(
+    JSON.stringify({
+      event: "gemini.structured_response",
+      finish_reason: finishReason ?? "UNKNOWN",
+      prompt_tokens: payload.usageMetadata?.promptTokenCount,
+      candidate_tokens: payload.usageMetadata?.candidatesTokenCount,
+      thought_tokens: payload.usageMetadata?.thoughtsTokenCount,
+      total_tokens: payload.usageMetadata?.totalTokenCount,
+    })
+  )
+  if (finishReason === "MAX_TOKENS") {
+    throw new GeminiStructuredOutputError(
+      "Gemini reached the output-token limit before completing the structured response",
+      "max_tokens",
+      finishReason
+    )
+  }
   const text = candidateText(payload)
-  if (!text) throw new Error("Gemini returned an empty structured response")
-  return JSON.parse(text) as T
+  if (!text) {
+    throw new GeminiStructuredOutputError(
+      "Gemini returned an empty structured response",
+      "empty",
+      finishReason
+    )
+  }
+  try {
+    return JSON.parse(text) as T
+  } catch {
+    throw new GeminiStructuredOutputError(
+      "Gemini returned malformed structured JSON",
+      "malformed",
+      finishReason
+    )
+  }
 }
 
 export async function* streamJson({

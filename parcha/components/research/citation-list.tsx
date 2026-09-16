@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import type { Citation, ResearchMode } from "@/lib/research/types"
 
 import { CitationCard } from "./citation-card"
+import { citationSourceId, citationSourceType } from "./lib/format"
 import styles from "./research.module.css"
 import { useResearchStore } from "./store/research-store"
 
@@ -44,8 +45,30 @@ export function CitationList({
     toast.message("Opening source PDF", {
       description: citation.case_name,
     })
+    if (citationSourceType(citation) === "legislation") {
+      const documentId = citation.document_id
+      if (!documentId) return
+      const params = new URLSearchParams({
+        page: String(Math.max(1, citation.pdf_page)),
+      })
+      if (mode === "ai_pro") params.set("from", "ai-pro")
+      if (citation.chunk_id) params.set("chunk", citation.chunk_id)
+      if (citation.unit_kind && citation.unit_number) {
+        params.set("unit", `${citation.unit_kind} ${citation.unit_number}`)
+      }
+      router.push(
+        `/legal/${encodeURIComponent(documentId)}?${params.toString()}`
+      )
+      return
+    }
+    const judgmentId = citation.judgment_id ?? citationSourceId(citation)
+    const params = new URLSearchParams({
+      page: String(Math.max(1, citation.pdf_page)),
+    })
+    if (mode === "ai_pro") params.set("from", "ai-pro")
+    if (citation.chunk_id) params.set("chunk", citation.chunk_id)
     router.push(
-      `/browse/${encodeURIComponent(citation.judgment_id)}?page=${Math.max(1, citation.pdf_page)}`
+      `/browse/${encodeURIComponent(judgmentId)}?${params.toString()}`
     )
   }
 
@@ -66,13 +89,13 @@ export function CitationList({
       <div className={styles.citationList}>
         {visibleCitations.map((citation, index) => (
           <CitationCard
-            key={citation.judgment_id}
+            key={citationSourceId(citation)}
             citation={citation}
             index={start + index}
             mode={mode}
             showRelevance={showRelevance}
-            expanded={expandedCitationId === citation.judgment_id}
-            onToggle={() => toggleCitation(citation.judgment_id)}
+            expanded={expandedCitationId === citationSourceId(citation)}
+            onToggle={() => toggleCitation(citationSourceId(citation))}
             onOpen={() => openSource(citation)}
           />
         ))}

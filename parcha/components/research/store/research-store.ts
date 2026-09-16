@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { toast } from "sonner"
 
 import type {
+  LegalSearchChunk,
   QueryAnalysis,
   ResearchMode,
   ResearchResult,
@@ -28,6 +29,7 @@ interface ResearchState {
   stages: StageMap
   analysis: QueryAnalysis | null
   sources: SearchChunk[]
+  legalSources: LegalSearchChunk[]
   streamedAnswer: string
   result: ResearchResult | null
   error: string
@@ -67,6 +69,7 @@ const idleState: ResearchState = {
   stages: initialStages(),
   analysis: null,
   sources: [],
+  legalSources: [],
   streamedAnswer: "",
   result: null,
   error: "",
@@ -115,6 +118,7 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
         stages: initialStages(),
         analysis: null,
         sources: [],
+        legalSources: [],
         streamedAnswer: "",
         result: null,
         error: "",
@@ -135,6 +139,7 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
         analysis: item.result.analysis,
         streamedAnswer: item.result.answer,
         sources: [],
+        legalSources: [],
         error: "",
         running: false,
         hasSubmitted: true,
@@ -160,6 +165,7 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
         stages: initialStages(),
         analysis: null,
         sources: [],
+        legalSources: [],
         streamedAnswer: "",
         result: null,
         error: "",
@@ -198,7 +204,10 @@ export const useResearchStore = create<ResearchState & ResearchActions>(
                 set({ analysis: event.analysis })
                 break
               case "sources":
-                set({ sources: event.chunks })
+                set({
+                  sources: event.chunks,
+                  legalSources: event.legal_chunks ?? [],
+                })
                 break
               case "answer_delta":
                 set((state) => ({

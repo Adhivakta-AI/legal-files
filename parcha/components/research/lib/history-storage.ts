@@ -44,6 +44,12 @@ export function safeHistory(value: string | null): HistoryItem[] {
           result: {
             ...item.result,
             mode,
+            analysis: {
+              ...item.result.analysis,
+              resolved_query:
+                item.result.analysis.resolved_query ??
+                item.result.analysis.corrected_query,
+            },
             synthesis_status:
               item.result.synthesis_status ??
               (mode === "search"

@@ -14,7 +14,9 @@ parcha/.env*
 .pytest_cache/
 cloudflare/node_modules/
 cloudflare/.wrangler/
+/.wrangler/
 backend/.cloudflare-ingest-checkpoint.json
+backend/.legal-corpus-ingest-checkpoint.json
 
 # local Codex/agent plugin cache
 .agents/

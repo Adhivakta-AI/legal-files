@@ -2,6 +2,7 @@ interface Env {
   AI: Ai;
   DB: D1Database;
   VECTORIZE: VectorizeIndex;
+  LEGAL_VECTORIZE: VectorizeIndex;
   DOCUMENTS: R2Bucket;
   BGE_MODEL: string;
   EMBEDDING_POOLING: string;
@@ -27,6 +28,17 @@ interface SearchBody {
 interface ContextBody {
   judgment_ids?: unknown;
   max_chars_per_judgment?: unknown;
+}
+
+interface LegalSearchBody {
+  query?: unknown;
+  limit?: unknown;
+}
+
+interface CitatorBody {
+  judgment_id?: unknown;
+  limit?: unknown;
+  reviewed_only?: unknown;
 }
 
 interface BrowseBody {
@@ -61,6 +73,7 @@ interface JudgmentRow {
   citation: string | null;
   neutral_citation: string | null;
   cnr: string | null;
+  case_number: string | null;
   court: string;
   decision_date: string | null;
   decision_year: number | null;
@@ -107,6 +120,55 @@ interface ChunkRow {
   pdf_page: number;
   paragraph_number: string | null;
   text_source: string;
+}
+
+interface LegalReference {
+  documentId: string;
+  unitKind: "article" | "section";
+  unitNumber: string;
+}
+
+interface LegalChunkRow {
+  chunk_id: string;
+  document_id: string;
+  unit_id: string;
+  document_title: string;
+  short_title: string;
+  source_kind: string;
+  unit_kind: string;
+  unit_number: string;
+  parent_label: string | null;
+  heading: string;
+  part_index: number;
+  chunk_text: string;
+  source_url: string;
+  canonical_url: string;
+  authority: string;
+  pdf_page_start: number | null;
+  pdf_page_end: number | null;
+  effective_from: string | null;
+  current_through: string | null;
+  commencement_note: string | null;
+}
+
+interface CitatorRow {
+  mention_id: string;
+  citing_judgment_id: string;
+  citing_title: string;
+  citing_citation: string | null;
+  citing_decision_date: string | null;
+  citing_chunk_id: string;
+  cited_case_name: string;
+  cited_reporter_citation: string | null;
+  pdf_page: number;
+  mention_evidence: string;
+  resolution_status: string;
+  match_confidence: number | null;
+  treatment: string | null;
+  treatment_scope: string | null;
+  treatment_evidence: string | null;
+  treatment_confidence: number | null;
+  review_status: string | null;
 }
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
@@ -410,6 +472,235 @@ async function semanticCandidates(
   return result.matches.map((match) => ({ id: match.id, score: match.score }));
 }
 
+const LEGAL_DOCUMENT_PATTERNS: Array<[string, RegExp]> = [
+  ["bns-2023", /\b(?:BNS|Bharatiya\s+Nyaya\s+Sanhita)\b/i],
+  ["bnss-2023", /\b(?:BNSS|Bharatiya\s+Nagarik\s+Suraksha\s+Sanhita)\b/i],
+  [
+    "constitution-of-india",
+    /\b(?:Constitution(?:\s+of\s+India)?|Indian\s+Constitution|COI)\b/i,
+  ],
+];
+
+function detectedLegalDocumentIds(query: string): string[] {
+  return LEGAL_DOCUMENT_PATTERNS.filter(([, pattern]) => pattern.test(query)).map(([id]) => id);
+}
+
+function directLegalReferences(query: string): LegalReference[] {
+  const detected = detectedLegalDocumentIds(query);
+  const references = new Map<string, LegalReference>();
+  const add = (reference: LegalReference) => {
+    const key = `${reference.documentId}:${reference.unitKind}:${reference.unitNumber}`;
+    if (!references.has(key)) references.set(key, reference);
+  };
+
+  const sectionDocuments = detected.filter((id) => id === "bns-2023" || id === "bnss-2023");
+  const sectionPattern = /\bsections?\s+(\d{1,3}(?:\s*(?:,|and|&)\s*\d{1,3})*)/gi;
+  for (const match of query.matchAll(sectionPattern)) {
+    const numbers = match[1].match(/\d{1,3}/g) ?? [];
+    for (const documentId of sectionDocuments) {
+      for (const unitNumber of numbers) add({ documentId, unitKind: "section", unitNumber });
+    }
+  }
+
+  const articleNumber = String.raw`\d{1,3}(?:-[A-Z]{1,2}|[A-Z]{0,2})`;
+  const articlePattern = new RegExp(
+    String.raw`\barticles?\s+(${articleNumber}(?:\s*(?:,|and|&)\s*${articleNumber})*)`,
+    "gi",
+  );
+  for (const match of query.matchAll(articlePattern)) {
+    const numbers = match[1].match(new RegExp(articleNumber, "gi")) ?? [];
+    for (const unitNumber of numbers) {
+      add({
+        documentId: "constitution-of-india",
+        unitKind: "article",
+        unitNumber: unitNumber.toUpperCase(),
+      });
+    }
+  }
+
+  return [...references.values()].slice(0, 8);
+}
+
+function legalVectorFilter(documentIds: string[]): VectorizeVectorMetadataFilter | undefined {
+  if (documentIds.length === 1) return { document_id: documentIds[0] };
+  if (documentIds.length > 1) return { document_id: { $in: documentIds } };
+  return undefined;
+}
+
+async function legalKeywordCandidates(
+  env: Env,
+  query: string,
+  limit: number,
+  documentIds: string[],
+): Promise<Candidate[]> {
+  const documentClause = documentIds.length
+    ? ` AND lc.document_id IN (${documentIds.map(() => "?").join(",")})`
+    : "";
+  const result = await env.DB.prepare(
+    `SELECT lc.id, bm25(legal_chunks_fts) AS score
+       FROM legal_chunks_fts
+       JOIN legal_chunks lc ON lc.rowid = legal_chunks_fts.rowid
+      WHERE legal_chunks_fts MATCH ?${documentClause}
+      ORDER BY score
+      LIMIT ?`,
+  )
+    .bind(ftsExpression(query), ...documentIds, limit)
+    .all<{ id: string; score: number }>();
+  return result.results.map((row) => ({ id: row.id, score: row.score }));
+}
+
+async function legalSemanticCandidates(
+  env: Env,
+  query: string,
+  limit: number,
+  documentIds: string[],
+): Promise<Candidate[]> {
+  const embedding = await embedQuery(env, query);
+  const result = await env.LEGAL_VECTORIZE.query(embedding, {
+    topK: limit,
+    returnMetadata: "none",
+    filter: legalVectorFilter(documentIds),
+  });
+  return result.matches.map((match) => ({ id: match.id, score: match.score }));
+}
+
+const LEGAL_CHUNK_COLUMNS = `
+  lc.id AS chunk_id, lc.document_id, lc.unit_id,
+  ld.title AS document_title, ld.short_title, ld.source_kind,
+  lc.unit_kind, lc.unit_number, lc.parent_label, lc.heading,
+  lc.part_index, lc.text AS chunk_text, ld.source_url, ld.canonical_url,
+  ld.authority, lc.pdf_page_start, lc.pdf_page_end,
+  ld.effective_from, ld.current_through,
+  json_extract(ld.metadata_json, '$.commencement_note') AS commencement_note`;
+
+async function fetchLegalChunks(env: Env, ids: string[]): Promise<Map<string, LegalChunkRow>> {
+  const statements: D1PreparedStatement[] = [];
+  for (let start = 0; start < ids.length; start += 50) {
+    const group = ids.slice(start, start + 50);
+    const placeholders = group.map(() => "?").join(",");
+    statements.push(
+      env.DB.prepare(
+        `SELECT ${LEGAL_CHUNK_COLUMNS}
+           FROM legal_chunks lc
+           JOIN legal_documents ld ON ld.id = lc.document_id
+          WHERE lc.id IN (${placeholders})`,
+      ).bind(...group),
+    );
+  }
+  if (!statements.length) return new Map();
+  const results = await env.DB.batch<LegalChunkRow>(statements);
+  return new Map(results.flatMap((result) => result.results).map((row) => [row.chunk_id, row]));
+}
+
+async function directLegalChunks(env: Env, references: LegalReference[]): Promise<LegalChunkRow[]> {
+  if (!references.length) return [];
+  const results = await env.DB.batch<LegalChunkRow>(
+    references.map((reference) =>
+      env.DB.prepare(
+        `SELECT ${LEGAL_CHUNK_COLUMNS}
+           FROM legal_chunks lc
+           JOIN legal_documents ld ON ld.id = lc.document_id
+          WHERE lc.document_id = ?1 AND lc.unit_kind = ?2 AND lc.unit_number = ?3
+          ORDER BY lc.part_index
+          LIMIT 12`,
+      ).bind(reference.documentId, reference.unitKind, reference.unitNumber),
+    ),
+  );
+  return results.flatMap((result) => result.results);
+}
+
+async function legalSearch(env: Env, request: Request): Promise<Response> {
+  const startedAt = performance.now();
+  let body: LegalSearchBody;
+  try {
+    body = (await request.json()) as LegalSearchBody;
+  } catch {
+    return jsonResponse(env, { error: "Request body must be valid JSON" }, 400);
+  }
+
+  try {
+    if (typeof body.query !== "string") throw new Error("query must be a string");
+    const query = body.query.trim().replace(/\s+/g, " ");
+    if (query.length < 3 || query.length > 500) {
+      throw new Error("query must be between 3 and 500 characters");
+    }
+    const limit = integer(body.limit, 12, 1, 30);
+    const candidateLimit = Math.min(Math.max(limit * 5, 40), 100);
+    const documentIds = detectedLegalDocumentIds(query);
+    const references = directLegalReferences(query);
+    const [keywords, semantics, directChunks] = await Promise.all([
+      legalKeywordCandidates(env, query, candidateLimit, documentIds),
+      legalSemanticCandidates(env, query, candidateLimit, documentIds),
+      directLegalChunks(env, references),
+    ]);
+
+    const rrfK = integer(Number(env.RRF_K), 60, 1, 1000);
+    const combined = new Map<
+      string,
+      { rrf: number; keywordScore: number | null; semanticScore: number | null }
+    >();
+    keywords.forEach((candidate, rank) => {
+      combined.set(candidate.id, {
+        rrf: 1 / (rrfK + rank + 1),
+        keywordScore: candidate.score,
+        semanticScore: null,
+      });
+    });
+    semantics.forEach((candidate, rank) => {
+      const current = combined.get(candidate.id) ?? {
+        rrf: 0,
+        keywordScore: null,
+        semanticScore: null,
+      };
+      current.rrf += 1 / (rrfK + rank + 1);
+      current.semanticScore = candidate.score;
+      combined.set(candidate.id, current);
+    });
+
+    const ranked = [...combined.entries()]
+      .sort((left, right) => right[1].rrf - left[1].rrf)
+      .slice(0, limit);
+    const chunks = await fetchLegalChunks(env, ranked.map(([id]) => id));
+    const passageResults = ranked.flatMap(([id, scores]) => {
+      const chunk = chunks.get(id);
+      return chunk
+        ? [{
+            ...chunk,
+            keyword_score: scores.keywordScore,
+            semantic_score: scores.semanticScore,
+            rrf_score: scores.rrf,
+            direct_match: false,
+          }]
+        : [];
+    });
+    const directIds = new Set(directChunks.map((chunk) => chunk.chunk_id));
+    const directResults = directChunks.map((chunk) => ({
+      ...chunk,
+      keyword_score: null,
+      semantic_score: null,
+      rrf_score: 1,
+      direct_match: true,
+    }));
+    const results = [
+      ...directResults,
+      ...passageResults.filter((chunk) => !directIds.has(chunk.chunk_id)),
+    ].slice(0, limit);
+
+    console.info(JSON.stringify({
+      event: "legal_search.complete",
+      result_count: results.length,
+      direct_reference_count: references.length,
+      document_filters: documentIds,
+      duration_ms: Math.round(performance.now() - startedAt),
+    }));
+    return jsonResponse(env, { query, results });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Legal search failed";
+    console.error(JSON.stringify({ event: "legal_search.error", message }));
+    return jsonResponse(env, { error: message }, 400);
+  }
+}
+
 async function fetchChunks(env: Env, ids: string[]): Promise<Map<string, ChunkRow>> {
   const statements: D1PreparedStatement[] = [];
   for (let start = 0; start < ids.length; start += 50) {
@@ -612,6 +903,68 @@ async function judgmentContext(env: Env, request: Request): Promise<Response> {
   }
 }
 
+async function citator(env: Env, request: Request): Promise<Response> {
+  const startedAt = performance.now();
+  let body: CitatorBody;
+  try {
+    body = (await request.json()) as CitatorBody;
+  } catch {
+    return jsonResponse(env, { error: "Request body must be valid JSON" }, 400);
+  }
+
+  try {
+    const judgmentId = optionalText(body.judgment_id, 160);
+    if (!judgmentId) throw new Error("judgment_id must be a non-empty string");
+    const limit = integer(body.limit, 50, 1, 100);
+    const reviewedOnly = body.reviewed_only === true;
+    const result = await env.DB.prepare(
+      `SELECT cm.id AS mention_id,
+              cm.citing_judgment_id,
+              j.title AS citing_title,
+              j.citation AS citing_citation,
+              j.decision_date AS citing_decision_date,
+              cm.citing_chunk_id,
+              cm.cited_case_name,
+              cm.cited_reporter_citation,
+              cm.pdf_page,
+              cm.evidence_text AS mention_evidence,
+              cm.resolution_status,
+              cm.match_confidence,
+              ct.treatment,
+              ct.treatment_scope,
+              ct.evidence_text AS treatment_evidence,
+              ct.confidence AS treatment_confidence,
+              ct.review_status
+         FROM citation_mentions cm
+         JOIN judgments j ON j.id = cm.citing_judgment_id
+         LEFT JOIN citation_treatments ct ON ct.mention_id = cm.id
+        WHERE cm.cited_judgment_id = ?1
+          AND cm.resolution_status = 'resolved'
+          AND (?2 = 0 OR ct.review_status = 'lawyer_reviewed')
+        ORDER BY j.decision_date DESC, cm.pdf_page, cm.id
+        LIMIT ?3`,
+    )
+      .bind(judgmentId, reviewedOnly ? 1 : 0, limit)
+      .all<CitatorRow>();
+
+    console.info(JSON.stringify({
+      event: "citator.complete",
+      result_count: result.results.length,
+      reviewed_only: reviewedOnly,
+      duration_ms: Math.round(performance.now() - startedAt),
+    }));
+    return jsonResponse(env, {
+      judgment_id: judgmentId,
+      reviewed_only: reviewedOnly,
+      treatments: result.results,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Citator lookup failed";
+    console.error(JSON.stringify({ event: "citator.error", message }));
+    return jsonResponse(env, { error: message }, 400);
+  }
+}
+
 const BROWSE_SORTS = new Set(["relevance", "recent", "oldest", "title"]);
 const BROWSE_MAX_PAGE_SIZE = 100;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -715,7 +1068,7 @@ async function openSearchBrowse(
 
 const BROWSE_ROW_COLUMNS = `
   j.id, j.title, j.petitioner, j.respondent, j.citation, j.neutral_citation,
-  j.cnr, j.court, j.decision_date, j.decision_year, j.disposal_nature,
+  j.cnr, j.case_number, j.court, j.decision_date, j.decision_year, j.disposal_nature,
   j.era, j.bench_size, j.available_languages, j.pdf_url, j.pdf_key`;
 
 async function browseRowsByIds(env: Env, ids: string[]): Promise<JudgmentRow[]> {
@@ -760,6 +1113,7 @@ async function browseSummaries(env: Env, rows: JudgmentRow[]) {
     citation: row.citation,
     neutral_citation: row.neutral_citation,
     cnr: row.cnr,
+    case_number: row.case_number,
     court: row.court,
     decision_date: row.decision_date,
     decision_year: row.decision_year,
@@ -1083,11 +1437,23 @@ export default {
       }
       return judgmentContext(env, request);
     }
+    if (request.method === "POST" && url.pathname === "/api/legal-search") {
+      if (!(await isAuthorized(request, env))) {
+        return jsonResponse(env, { error: "Unauthorized" }, 401);
+      }
+      return legalSearch(env, request);
+    }
     if (request.method === "POST" && url.pathname === "/api/browse") {
       if (!(await isAuthorized(request, env))) {
         return jsonResponse(env, { error: "Unauthorized" }, 401);
       }
       return browse(env, request);
+    }
+    if (request.method === "POST" && url.pathname === "/api/citator") {
+      if (!(await isAuthorized(request, env))) {
+        return jsonResponse(env, { error: "Unauthorized" }, 401);
+      }
+      return citator(env, request);
     }
     return jsonResponse(env, { error: "Not found" }, 404);
   },

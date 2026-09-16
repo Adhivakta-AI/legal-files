@@ -88,7 +88,7 @@ def embed_chunks(
                 "`uv sync --extra embedding-gpu`."
             ) from error
 
-        providers = None
+        providers = ["CPUExecutionProvider"]
         if device == "cuda":
             import onnxruntime as ort
 
@@ -103,7 +103,9 @@ def embed_chunks(
             providers=providers,
         )
         documents = (
-            str(chunk["text"]) for _, selected, _, _ in pending for chunk in selected
+            str(chunk.get("embedding_text") or chunk["text"])
+            for _, selected, _, _ in pending
+            for chunk in selected
         )
         embedded = iter(
             model.embed(

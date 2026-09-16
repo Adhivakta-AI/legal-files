@@ -190,10 +190,10 @@ export function buildBrowseBody(input) {
         minimum_should_match: 1,
         should: [
           { match_phrase: { title: { query: input.q, boost: 18 } } },
-          { multi_match: { query: input.q, fields: ["petitioner^12", "respondent^12", "citation^15", "neutral_citation^15"], type: "phrase" } },
+          { multi_match: { query: input.q, fields: ["petitioner^12", "respondent^12", "citation^15", "neutral_citation^15", "case_number^15"], type: "phrase" } },
           { match_phrase: { text: { query: input.q, boost: 8 } } },
           { match_phrase: { text: { query: input.q, slop: 2, boost: 4 } } },
-          { multi_match: { query: input.q, fields: ["title^5", "petitioner^4", "respondent^4", "citation^6", "neutral_citation^6", "text^3"], operator: "and" } },
+          { multi_match: { query: input.q, fields: ["title^5", "petitioner^4", "respondent^4", "citation^6", "neutral_citation^6", "case_number^6", "text^3"], operator: "and" } },
           { match: { text: { query: input.q, operator: "and", boost: 1.5 } } },
           { match: { "text.stemmed": { query: input.q, operator: "and", boost: 1 } } },
         ],

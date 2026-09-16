@@ -54,6 +54,7 @@ function sourceDocument(metadata, source, batchId, text) {
     citation: metadata?.citation ?? source.citation ?? null,
     neutral_citation: metadata?.neutral_citation ?? null,
     cnr: metadata?.cnr ?? null,
+    case_number: metadata?.case_number ?? null,
     decision_date: metadata?.decision_date ?? source.decision_date ?? null,
     decision_year: Number.isInteger(metadata?.decision_year)
       ? metadata.decision_year

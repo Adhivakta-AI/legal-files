@@ -44,6 +44,7 @@ async function query(sql, params, attempts = 6) {
 const sql = `
   SELECT j.id AS judgment_id, j.title, j.petitioner, j.respondent, j.citation,
          j.neutral_citation, j.cnr, j.decision_date, j.decision_year,
+         j.case_number,
          j.disposal_nature, j.available_languages, j.era, j.bench_size, j.court,
          COALESCE((
            SELECT json_group_array(name)

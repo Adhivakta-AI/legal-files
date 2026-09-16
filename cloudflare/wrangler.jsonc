@@ -7,7 +7,11 @@
   "observability": { "enabled": true },
   "ai": { "binding": "AI" },
   "vectorize": [
-    { "binding": "VECTORIZE", "index_name": "parcha-judgment-chunks" }
+    { "binding": "VECTORIZE", "index_name": "parcha-judgment-chunks" },
+    {
+      "binding": "LEGAL_VECTORIZE",
+      "index_name": "parcha-legal-provisions"
+    }
   ],
   "d1_databases": [
     {

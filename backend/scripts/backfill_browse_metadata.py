@@ -4,16 +4,16 @@ Migration 0003 adds descriptive columns to `judgments` plus the `judges` /
 `judgment_judges` relation and the `judgments_meta_fts` index. This script reads
 every `manifest.jsonl` under the batch root and:
 
-  1. seeds `judges` with every distinct bench member,
+  1. optionally seeds the legacy manifest judge names,
   2. for each judgment that exists in D1:
        - UPDATEs petitioner / respondent / neutral_citation / cnr /
-         disposal_nature / available_languages / era / bench_size,
-       - rewrites its `judgment_judges` rows,
+         disposal_nature / available_languages / era,
+       - only rewrites legacy bench metadata when explicitly requested,
   3. rebuilds `judgments_meta_fts`.
 
-Every write is idempotent (UPDATE by id, DELETE+INSERT for the bench, ON
-CONFLICT DO NOTHING for judges), so re-running after a failure is safe. Progress
-is checkpointed per batch so a resumed run skips finished manifests.
+Every write is idempotent, so re-running after a failure is safe. Progress is
+checkpointed per batch so a resumed run skips finished manifests. By default,
+the script preserves authoritative bench data produced by the metadata audit.
 
 Env (backend/.env): CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN,
 CLOUDFLARE_D1_DATABASE_ID. Override the source path with CLOUDFLARE_BATCH_ROOT.
@@ -195,14 +195,19 @@ def seed_judges(db: CloudflareD1, manifests: list[Path]) -> int:
         for record in read_manifest(path):
             names.update(parse_judges(record.get("judge")))
     statements = [
-        {"sql": "INSERT INTO judges(name) VALUES (?) ON CONFLICT(name) DO NOTHING", "params": [name]}
+        {
+            "sql": "INSERT INTO judges(name) VALUES (?) ON CONFLICT(name) DO NOTHING",
+            "params": [name],
+        }
         for name in sorted(names)
     ]
     db.batch(statements)
     return len(names)
 
 
-def judgment_statements(record: dict[str, Any]) -> list[dict[str, Any]]:
+def judgment_statements(
+    record: dict[str, Any], *, overwrite_manifest_bench: bool = False
+) -> list[dict[str, Any]]:
     judgment_id = record.get("sample_id")
     if not isinstance(judgment_id, str) or not judgment_id:
         return []
@@ -220,8 +225,7 @@ def judgment_statements(record: dict[str, Any]) -> list[dict[str, Any]]:
                     cnr = ?,
                     disposal_nature = ?,
                     available_languages = ?,
-                    era = ?,
-                    bench_size = ?
+                    era = ?
                 WHERE id = ?
             """,
             "params": [
@@ -232,15 +236,25 @@ def judgment_statements(record: dict[str, Any]) -> list[dict[str, Any]]:
                 meta["disposal_nature"],
                 meta["available_languages"],
                 meta["era"],
-                len(judges) or None,
                 judgment_id,
             ],
-        },
-        {
-            "sql": "DELETE FROM judgment_judges WHERE judgment_id = ?",
-            "params": [judgment_id],
-        },
+        }
     ]
+    if not overwrite_manifest_bench:
+        return statements
+
+    statements.extend(
+        [
+            {
+                "sql": "UPDATE judgments SET bench_size = ? WHERE id = ?",
+                "params": [len(judges) or None, judgment_id],
+            },
+            {
+                "sql": "DELETE FROM judgment_judges WHERE judgment_id = ?",
+                "params": [judgment_id],
+            },
+        ]
+    )
     for seat, name in enumerate(judges):
         statements.append(
             {
@@ -266,6 +280,7 @@ def backfill(
     checkpoint_path: Path,
     checkpoint: dict[str, Any],
     flush_every: int,
+    overwrite_manifest_bench: bool,
 ) -> tuple[int, int]:
     updated = 0
     skipped = 0
@@ -285,7 +300,11 @@ def backfill(
             if record.get("sample_id") not in known_ids:
                 skipped += 1
                 continue
-            pending.extend(judgment_statements(record))
+            pending.extend(
+                judgment_statements(
+                    record, overwrite_manifest_bench=overwrite_manifest_bench
+                )
+            )
             updated += 1
             processed_in_batch += 1
             if len(pending) >= flush_every:
@@ -304,6 +323,14 @@ def parse_args() -> argparse.Namespace:
         "--batch-root",
         type=Path,
         default=Path(os.getenv("CLOUDFLARE_BATCH_ROOT", DEFAULT_BATCH_ROOT)),
+    )
+    parser.add_argument(
+        "--overwrite-manifest-bench",
+        action="store_true",
+        help=(
+            "Replace authoritative coram data with the legacy manifest judge field. "
+            "Do not use after the upstream metadata repair."
+        ),
     )
     parser.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
     parser.add_argument(
@@ -337,7 +364,9 @@ def main() -> None:
     known_ids = existing_judgment_ids(db)
     print(f"  {len(known_ids):,} judgments in D1")
 
-    if args.skip_judge_seed or checkpoint.get("_judges_seeded"):
+    if not args.overwrite_manifest_bench:
+        print("preserving existing bench/coram metadata")
+    elif args.skip_judge_seed or checkpoint.get("_judges_seeded"):
         print("skipping judge seed")
     else:
         print("seeding judges ...")
@@ -347,7 +376,13 @@ def main() -> None:
         print(f"  {count:,} distinct judges")
 
     updated, skipped = backfill(
-        db, manifests, known_ids, args.checkpoint, checkpoint, args.flush_every
+        db,
+        manifests,
+        known_ids,
+        args.checkpoint,
+        checkpoint,
+        args.flush_every,
+        args.overwrite_manifest_bench,
     )
 
     print("rebuilding judgments_meta_fts ...")

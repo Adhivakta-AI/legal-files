@@ -15,6 +15,7 @@ from judgment_ocr.batch import (
 )
 from judgment_ocr.embedding import DEFAULT_MODEL
 from judgment_ocr.finalize import build_fallback_queue, finalize_documents
+from judgment_ocr.legal_corpus import DEFAULT_CORPUS_VERSION, build_legal_corpus
 from judgment_ocr.runner import run_tasks
 from judgment_ocr.sampling import (
     DEFAULT_ACTIONS,
@@ -140,6 +141,15 @@ def _build_parser() -> argparse.ArgumentParser:
     embed.add_argument("--threads", type=int)
     embed.add_argument("--parallel", type=int)
     embed.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+
+    legal = subparsers.add_parser(
+        "legal-corpus", help="build structural BNS, BNSS, and Constitution artifacts"
+    )
+    legal.add_argument("--bns-pdf", type=Path, required=True)
+    legal.add_argument("--bnss-pdf", type=Path, required=True)
+    legal.add_argument("--constitution-pdf", type=Path, required=True)
+    legal.add_argument("--output-root", type=Path, required=True)
+    legal.add_argument("--corpus-version", default=DEFAULT_CORPUS_VERSION)
     return parser
 
 
@@ -302,6 +312,17 @@ def main() -> None:
             threads=args.threads,
             parallel=args.parallel,
             device=args.device,
+        )
+        print(json.dumps(summary, indent=2))
+        return
+
+    if args.command == "legal-corpus":
+        summary = build_legal_corpus(
+            bns_pdf=args.bns_pdf,
+            bnss_pdf=args.bnss_pdf,
+            constitution_pdf=args.constitution_pdf,
+            output_root=args.output_root,
+            corpus_version=args.corpus_version,
         )
         print(json.dumps(summary, indent=2))
         return

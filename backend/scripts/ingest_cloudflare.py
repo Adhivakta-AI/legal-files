@@ -8,22 +8,21 @@ retry is safe: D1 chunk inserts ignore existing IDs and Vectorize uses upsert.
 from __future__ import annotations
 
 import argparse
-from collections.abc import Iterable, Iterator, Sequence
-from dataclasses import dataclass
 import gzip
 import json
 import mimetypes
 import os
-from pathlib import Path
 import time
-from typing import Any
 import urllib.error
 import urllib.request
 import uuid
+from collections.abc import Iterable, Iterator, Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 import numpy as np
 from dotenv import load_dotenv
-
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BATCH_ROOT = Path("/home/shauray/judgment-ocr-data/r2-batches")
@@ -42,7 +41,7 @@ class CloudflareConfig:
     vectorize_index: str
 
     @classmethod
-    def from_environment(cls) -> "CloudflareConfig":
+    def from_environment(cls) -> CloudflareConfig:
         load_dotenv(BACKEND_ROOT / ".env")
         values = {
             "account_id": os.getenv("CLOUDFLARE_ACCOUNT_ID", ""),
@@ -102,7 +101,7 @@ class CloudflareAPI:
                         payload = json.load(exc)
                         errors = payload.get("errors") or []
                         message = errors[0].get("message") if errors else None
-                    except Exception:
+                    except (json.JSONDecodeError, UnicodeDecodeError):
                         message = None
                     raise RuntimeError(
                         f"Cloudflare API HTTP {exc.code}: {message or exc.reason}"
@@ -131,23 +130,23 @@ class CloudflareAPI:
         ):
             raise RuntimeError("One or more D1 batch statements failed")
 
-    def upsert_vectors(self, rows: Sequence[SourceRow], batch_id: str) -> None:
+    def upsert_vector_records(self, records: Sequence[dict[str, Any]]) -> None:
         lines: list[str] = []
-        for row in rows:
-            chunk = row.chunk
-            metadata: dict[str, Any] = {
-                "judgment_id": chunk["sample_id"],
-                "batch_id": batch_id,
-                "pdf_page": chunk["pdf_page"],
-            }
-            decision_year = chunk.get("decision_year")
-            if isinstance(decision_year, int):
-                metadata["decision_year"] = decision_year
+        for record in records:
+            vector_id = record.get("id")
+            values = record.get("values")
+            metadata = record.get("metadata")
+            if not isinstance(vector_id, str) or not vector_id:
+                raise ValueError("Vector record is missing an ID")
+            if not isinstance(values, list) or len(values) != VECTOR_DIMENSIONS:
+                raise ValueError(f"Vector {vector_id} must have {VECTOR_DIMENSIONS} values")
+            if not isinstance(metadata, dict):
+                raise TypeError(f"Vector {vector_id} metadata must be an object")
             lines.append(
                 json.dumps(
                     {
-                        "id": chunk["id"],
-                        "values": row.vector.astype(float).tolist(),
+                        "id": vector_id,
+                        "values": values,
                         "metadata": metadata,
                     },
                     ensure_ascii=False,
@@ -175,12 +174,33 @@ class CloudflareAPI:
         )
         result = payload.get("result") or {}
         accepted_count = result.get("count")
-        if accepted_count is not None and accepted_count != len(rows):
+        if accepted_count is not None and accepted_count != len(records):
             raise RuntimeError(
-                f"Vectorize accepted {accepted_count} vectors; expected {len(rows)}"
+                f"Vectorize accepted {accepted_count} vectors; expected {len(records)}"
             )
         if accepted_count is None and not result.get("mutationId"):
             raise RuntimeError("Vectorize returned neither a count nor a mutation ID")
+
+    def upsert_vectors(self, rows: Sequence[SourceRow], batch_id: str) -> None:
+        records: list[dict[str, Any]] = []
+        for row in rows:
+            chunk = row.chunk
+            metadata: dict[str, Any] = {
+                "judgment_id": chunk["sample_id"],
+                "batch_id": batch_id,
+                "pdf_page": chunk["pdf_page"],
+            }
+            decision_year = chunk.get("decision_year")
+            if isinstance(decision_year, int):
+                metadata["decision_year"] = decision_year
+            records.append(
+                {
+                    "id": chunk["id"],
+                    "values": row.vector.astype(float).tolist(),
+                    "metadata": metadata,
+                }
+            )
+        self.upsert_vector_records(records)
 
 
 def read_jsonl(path: Path) -> Iterator[dict[str, Any]]:

@@ -170,7 +170,7 @@ UV_CACHE_DIR=.uv-cache UV_PYTHON_INSTALL_DIR=.uv-python \
 uv run --extra embedding-gpu judgment-ocr embed \
   --chunks work/final/chunks.jsonl.gz \
   --output-root work/embeddings-gpu \
-  --cache-dir model-cache/fastembed \
+  --cache-dir model-cache \
   --model BAAI/bge-small-en-v1.5 \
   --dimensions 384 \
   --shard-size 1000 \
@@ -178,6 +178,44 @@ uv run --extra embedding-gpu judgment-ocr embed \
   --threads 2 \
   --device cuda
 ```
+
+## Build the primary-law corpus
+
+Run these commands from the repository root. The structural parser keeps Acts
+as sections, the Constitution as articles, and schedule pages as separate legal
+units so retrieval results retain usable provision and PDF-page citations.
+All three inputs are the authoritative BNS, BNSS, and Constitution PDF sources
+supplied at the repository root.
+
+```bash
+ocr/.venv/bin/judgment-ocr legal-corpus \
+  --bns-pdf a2023-45.pdf \
+  --bnss-pdf thisone.pdf \
+  --constitution-pdf constitution.pdf \
+  --output-root /tmp/parcha-legal-corpus-current \
+  --corpus-version legal-primary-YYYY-MM-DD
+```
+
+Generate all provision embeddings on an NVIDIA GPU. CUDA mode preloads the
+repository-local CUDA libraries and asks ONNX Runtime for the CUDA provider;
+the resulting summary records `"device": "cuda"`.
+
+```bash
+ocr/.venv/bin/judgment-ocr embed \
+  --chunks /tmp/parcha-legal-corpus-current/chunks.jsonl.gz \
+  --output-root /tmp/parcha-legal-corpus-current/embeddings \
+  --cache-dir ocr/model-cache \
+  --model BAAI/bge-small-en-v1.5 \
+  --dimensions 384 \
+  --shard-size 1000 \
+  --batch-size 128 \
+  --threads 4 \
+  --device cuda
+```
+
+Both commands are deterministic and resumable. Source hashes, corpus version,
+document/unit IDs, page locations, embedding model, dimensions, and device are
+written into the generated artifacts for validation before upload.
 
 For local development without Docker, use the repository-local Python 3.11
 environment and explicitly keep Paddle's cache in the project:

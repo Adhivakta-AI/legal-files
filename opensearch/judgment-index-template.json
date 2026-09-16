@@ -62,6 +62,11 @@
         "fields": { "exact": { "type": "keyword", "normalizer": "folded_keyword" } }
       },
       "cnr": { "type": "keyword" },
+      "case_number": {
+        "type": "text",
+        "analyzer": "legal_exact",
+        "fields": { "exact": { "type": "keyword", "normalizer": "folded_keyword" } }
+      },
       "decision_date": { "type": "date", "format": "strict_date", "ignore_malformed": true },
       "decision_year": { "type": "short" },
       "disposal_nature": { "type": "keyword" },

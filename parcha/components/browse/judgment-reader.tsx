@@ -69,8 +69,14 @@ export function JudgmentReader({
   const readingCopySupportsCitation =
     !highlightChunkId ||
     Boolean(readerData.readingCopy?.chunkToBlockId[highlightChunkId])
+  // The generated reading copy is the primary view; the preserved source PDF
+  // stays one toggle away. The older HTML prototype only covers a couple of
+  // judgments, so it is a fallback for when no generated PDF exists.
+  const readingCopyAvailable =
+    readerData.readingCopyPdf || Boolean(readerData.readingCopy)
   const [viewMode, setViewMode] = useState<"reading" | "original">(() =>
-    readerData.readingCopy && readingCopySupportsCitation
+    readerData.readingCopyPdf ||
+    (readerData.readingCopy && readingCopySupportsCitation)
       ? "reading"
       : "original"
   )
@@ -89,6 +95,10 @@ export function JudgmentReader({
     if (!judgment.pdf_url) return ""
     return `${pdfPath}#page=${Math.max(1, selectedPdfPage)}&view=FitH&toolbar=1`
   }, [judgment.pdf_url, pdfPath, selectedPdfPage])
+  const readingCopySrc = useMemo(() => {
+    if (!readerData.readingCopyPdf) return ""
+    return `${pdfPath}&variant=reading-copy#page=${Math.max(1, selectedPdfPage)}&view=FitH&toolbar=1`
+  }, [readerData.readingCopyPdf, pdfPath, selectedPdfPage])
 
   const date = formatDate(judgment.decision_date)
   const strength = benchStrength(judgment.bench_size)
@@ -144,7 +154,7 @@ export function JudgmentReader({
             </button>
           </div>
         ) : null}
-        {readerData.readingCopy ? (
+        {readingCopyAvailable ? (
           <div className={styles.viewSwitch} aria-label="Document view">
             <button
               type="button"
@@ -340,7 +350,12 @@ export function JudgmentReader({
 
         <div className={styles.viewer}>
           {readerTab === "document" ? (
-            viewMode === "reading" && readerData.readingCopy ? (
+            viewMode === "reading" && readingCopySrc ? (
+              <iframe
+                src={readingCopySrc}
+                title={`${judgment.title} — Vidhi Kosh reading copy`}
+              />
+            ) : viewMode === "reading" && readerData.readingCopy ? (
               <JudgmentReadingCopyView
                 judgment={judgment}
                 readingCopy={readerData.readingCopy}

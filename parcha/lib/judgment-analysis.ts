@@ -9,7 +9,7 @@ import type {
 import { generateJson } from "@/lib/research/gemini"
 import { cloudflareEnv } from "@/lib/server-env"
 
-const ANALYSIS_SCHEMA_VERSION = 2
+const ANALYSIS_SCHEMA_VERSION = 3
 const MAX_SOURCE_CHARACTERS = 1_500_000
 
 interface JudgmentRecord {
@@ -266,6 +266,9 @@ RULES
 - For sort_key use YYYY-MM-DD, YYYY-MM, or YYYY where the source permits; otherwise use an empty string.
 - Omit repetitive, immaterial, or merely citation-history dates.
 - If an issue or fact is unclear, say so rather than infer it.
+- Be concise: overview at most 140 words; 4-7 material facts; 2-5 issues; 2-5 holdings;
+  4-8 reasoning points; outcome at most 120 words; and no more than 20 material dated events.
+- Keep every list item under 90 words and omit repetition.
 
 INDEXED JUDGMENT TEXT
 ${packet}`
@@ -400,9 +403,9 @@ export async function getOrCreateJudgmentAnalysis(
     schema: analysisSchema,
     signal,
     timeoutMs: 90_000,
-    maxOutputTokens: 8_192,
+    maxOutputTokens: 12_288,
     temperature: 0.05,
-    thinkingBudget: 2_048,
+    thinkingBudget: 1_024,
   })
   const analysis = finalise(judgmentId, modelAnalysis, chunks, packet.chunks)
   await db

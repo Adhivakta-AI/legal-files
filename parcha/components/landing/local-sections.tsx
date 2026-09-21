@@ -28,9 +28,9 @@ function LocalFlowDiagram() {
         stroke="rgba(240,237,230,.08)"
         strokeDasharray="4 4"
       />
-      <rect x="15" y="61" width="96" height="14" fill="var(--ink)" />
+      <rect x="15" y="61" width="132" height="14" fill="var(--ink)" />
       <text x="20" y="71" className="diagram-label">
-        THE LEX ENGINE
+        THE VIDHI KOSH ENGINE
       </text>
 
       <g className="svg-card">
@@ -100,7 +100,7 @@ function LocalFlowDiagram() {
           textAnchor="middle"
           className="rig-diagram-title"
         >
-          LEX
+          VIDHI KOSH
         </text>
         <text x="273" y="124" textAnchor="middle" className="card-accent">
           ✓ INTENT UNDERSTOOD
@@ -344,7 +344,7 @@ export function LocalSections() {
           <div className="intro-flex">
             <div className="intro-headline-wrap" data-reveal>
               <Badge className="intro-badge" icon="introducing">
-                Introducing Lex
+                Introducing Vidhi Kosh
               </Badge>
               <h2 className="display intro-title">
                 The AI
@@ -352,9 +352,9 @@ export function LocalSections() {
                 Smart Search.
               </h2>
               <p className="intro-desc">
-                Ask the question the way you would ask a colleague. Lex reads
-                the intent behind it and returns the authority that answers it —
-                ranked, cross-referenced, and ready to cite.
+                Ask the question the way you would ask a colleague. Vidhi Kosh
+                reads the intent behind it and returns the authority that
+                answers it — ranked, cross-referenced, and ready to cite.
               </p>
             </div>
             <div className="intro-spacer" />

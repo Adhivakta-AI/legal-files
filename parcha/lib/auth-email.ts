@@ -37,7 +37,7 @@ async function sendAuthEmail({
     to,
     subject,
     text: `${intro}\n\n${action}: ${link}\n\nThis link expires in one hour. If you did not request it, you can ignore this email.`,
-    html: `<div style="background:#0a0a0a;color:#f0ede6;font-family:Arial,sans-serif;padding:32px"><p style="color:#8ebeff;font-family:monospace;font-size:12px;letter-spacing:.12em">LEX ARCHIVES</p><h1 style="font-size:24px">${subject}</h1><p style="color:#aaa">${intro}</p><p style="margin:28px 0"><a href="${htmlLink}" style="background:#78aef8;color:#090909;padding:12px 18px;text-decoration:none;font-weight:700">${action}</a></p><p style="color:#777;font-size:12px">This link expires in one hour. If you did not request it, you can ignore this email.</p></div>`,
+    html: `<div style="background:#0a0a0a;color:#f0ede6;font-family:Arial,sans-serif;padding:32px"><p style="color:#8ebeff;font-family:monospace;font-size:12px;letter-spacing:.12em">VIDHI KOSH</p><h1 style="font-size:24px">${subject}</h1><p style="color:#aaa">${intro}</p><p style="margin:28px 0"><a href="${htmlLink}" style="background:#78aef8;color:#090909;padding:12px 18px;text-decoration:none;font-weight:700">${action}</a></p><p style="color:#777;font-size:12px">This link expires in one hour. If you did not request it, you can ignore this email.</p></div>`,
   })
   if (error) throw new Error(`Resend rejected the authentication email: ${error.message}`)
 }
@@ -46,7 +46,7 @@ export function sendVerificationEmail(to: string, url: string) {
   return sendAuthEmail({
     to,
     url,
-    subject: "Verify your Lex Archives email",
+    subject: "Verify your Vidhi Kosh email",
     intro: "Confirm this address to activate your research workspace.",
     action: "Verify email",
   })
@@ -56,7 +56,7 @@ export function sendPasswordResetEmail(to: string, url: string) {
   return sendAuthEmail({
     to,
     url,
-    subject: "Reset your Lex Archives password",
+    subject: "Reset your Vidhi Kosh password",
     intro: "A password reset was requested for your account.",
     action: "Reset password",
   })

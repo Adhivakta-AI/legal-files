@@ -25,8 +25,8 @@ const steps = [
         <span className="hl-dim">Judgments mapped into the index</span>
         <br />
         <br />
-        <span className="hl-bright">Lex</span>
-        {nbsp(13)}
+        <span className="hl-bright">Vidhi Kosh</span>
+        {nbsp(7)}
         <span className="hl-green">████████████████████</span>{" "}
         <span className="hl-green">SC · HC · tribunals</span>
         <br />
@@ -45,7 +45,7 @@ const steps = [
         <br />
         <br />
         <span className="hl-bright">
-          Lex maps the whole record,
+          Vidhi Kosh maps the whole record,
           <br />
           continuously.
         </span>
@@ -74,8 +74,8 @@ const steps = [
         <span className="hl-dim">██████░░░░░░░░░░░░░░</span>{" "}
         <span className="hl-dim">required</span>
         <br />
-        <span className="hl-bright">Lex</span>
-        {nbsp(10)}
+        <span className="hl-bright">Vidhi Kosh</span>
+        {nbsp(3)}
         <span className="hl-green">▎</span>
         <span className="hl-dim">░░░░░░░░░░░░░░░░░░░</span>{" "}
         <span className="hl-green">plain English</span>
@@ -100,8 +100,8 @@ const steps = [
         <span className="hl-dim">Time spent verifying</span>
         <br />
         <br />
-        <span className="hl-bright">Lex</span>
-        {nbsp(10)}
+        <span className="hl-bright">Vidhi Kosh</span>
+        {nbsp(3)}
         <span className="hl-green">▎</span>
         <span className="hl-dim">░░░░░░░░░░░░░░░░░░░</span>{" "}
         <span className="hl-green">seconds</span>
@@ -115,8 +115,8 @@ const steps = [
         <span className="hl-dim">Treatment history</span>
         <br />
         <br />
-        <span className="hl-bright">Lex</span>
-        {nbsp(30)}
+        <span className="hl-bright">Vidhi Kosh</span>
+        {nbsp(24)}
         <span className="hl-green">resolved</span>
         <br />
         <span className="hl-dim">Manual check</span>

@@ -18,10 +18,10 @@ export async function generateMetadata({
   const document = await getLegalDocument(documentId)
   return document
     ? {
-        title: `${document.short_title} — Lex Archives`,
+        title: `${document.short_title} — Vidhi Kosh`,
         description: `${document.title} · ${document.authority}`,
       }
-    : { title: "Primary law — Lex Archives" }
+    : { title: "Primary law — Vidhi Kosh" }
 }
 
 export default async function LegalDocumentPage({

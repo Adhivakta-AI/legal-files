@@ -37,6 +37,11 @@ pnpm-debug.log*
 .env*
 !.env.example
 
+# wrangler local secrets — .env* does not match these
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

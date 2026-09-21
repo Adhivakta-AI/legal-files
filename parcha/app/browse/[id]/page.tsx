@@ -20,7 +20,7 @@ export async function generateMetadata({
     const judgment = await fetchJudgment(decodeURIComponent(id))
     if (judgment) {
       return {
-        title: `${judgment.title} — Lex Archives`,
+        title: `${judgment.title} — Vidhi Kosh`,
         description: judgment.citation
           ? `${judgment.citation} · ${judgment.court}`
           : judgment.court,
@@ -29,7 +29,7 @@ export async function generateMetadata({
   } catch {
     // fall through to the default
   }
-  return { title: "Judgment — Lex Archives" }
+  return { title: "Judgment — Vidhi Kosh" }
 }
 
 export default async function JudgmentPage({

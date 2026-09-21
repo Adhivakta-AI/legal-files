@@ -262,7 +262,7 @@ export function JudgmentReadingCopyView({
         <div className={styles.provenance} data-print-hide>
           <div>
             <span className={styles.provenanceEyebrow}>
-              LEX ARCHIVES · READING COPY
+              VIDHI KOSH · READING COPY
             </span>
             <strong>Clean judgment text, mapped back to the source PDF.</strong>
           </div>
@@ -361,7 +361,7 @@ export function JudgmentReadingCopyView({
                 </div>
 
                 <footer className={styles.pageFooter}>
-                  <strong>LEX ARCHIVES READING COPY</strong>
+                  <strong>VIDHI KOSH READING COPY</strong>
                   <span>
                     Reconstructed from Supreme Court Reports text · Unofficial
                     and not certified by the Supreme Court of India

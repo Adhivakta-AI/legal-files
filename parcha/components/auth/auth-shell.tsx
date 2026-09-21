@@ -22,9 +22,9 @@ export function AuthShell({
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <Link href="/" className={styles.brand} aria-label="Lex Archives home">
+        <Link href="/" className={styles.brand} aria-label="Vidhi Kosh home">
           <BrandMark className={styles.brandMark} />
-          <strong>LEX ARCHIVES</strong>
+          <strong>VIDHI KOSH</strong>
         </Link>
         <div className={styles.headerActions}>
           <Link href="/" className={styles.homeLink}>

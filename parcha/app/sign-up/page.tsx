@@ -5,7 +5,7 @@ import { SignUpForm } from "@/components/auth/auth-forms"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { isGoogleAuthConfigured } from "@/lib/auth"
 
-export const metadata: Metadata = { title: "Create account — Lex Archives" }
+export const metadata: Metadata = { title: "Create account — Vidhi Kosh" }
 export const dynamic = "force-dynamic"
 
 export default function SignUpPage() {

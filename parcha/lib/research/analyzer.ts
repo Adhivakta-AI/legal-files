@@ -169,7 +169,7 @@ const ANALYSIS_SCHEMA: Record<string, unknown> = {
   ],
 }
 
-const ANALYZER_SYSTEM_PROMPT = `You are the query-analysis layer for Lex Archives, an Indian legal research system covering official primary law and Supreme Court judgments.
+const ANALYZER_SYSTEM_PROMPT = `You are the query-analysis layer for Vidhi Kosh, an Indian legal research system covering official primary law and Supreme Court judgments.
 
 Your only job is to improve retrieval. Never answer the legal question and never invent facts, party names, statutes, sections, or cases.
 

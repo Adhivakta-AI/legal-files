@@ -1,5 +1,9 @@
 import { getAuth } from "@/lib/auth"
 import { verifyPdfAccessToken } from "@/lib/pdf-access"
+import {
+  READING_COPY_VARIANT,
+  readingCopyKey,
+} from "@/lib/reading-copy-artifacts"
 import { cloudflareEnv } from "@/lib/server-env"
 
 export const runtime = "nodejs"
@@ -111,9 +115,9 @@ async function judgmentPdf(request: Request, judgmentId: string) {
 async function fromArchive(
   request: Request,
   judgmentId: string,
-  includeBody: boolean
+  includeBody: boolean,
+  key = `judgments/${judgmentId}/source.pdf`
 ): Promise<Response | null> {
-  const key = `judgments/${judgmentId}/source.pdf`
   const range = request.headers.get("range")
   const bucket = cloudflareEnv().DOCUMENTS
   const archived = await bucket.head(key)
@@ -173,10 +177,30 @@ async function fromOriginal(
   })
 }
 
+/**
+ * `?variant=reading-copy` serves the generated editorial reading copy instead of
+ * the preserved source. It deliberately never falls back to the source PDF: the
+ * two are different documents, and silently swapping them would show the reader
+ * something other than what they asked for.
+ */
+function readingCopyRequested(request: Request): boolean {
+  return (
+    new URL(request.url).searchParams.get("variant") === READING_COPY_VARIANT
+  )
+}
+
 export async function GET(request: Request, { params }: RouteParameters) {
   const { judgmentId } = await params
   const result = await judgmentPdf(request, judgmentId)
   if ("error" in result) return result.error
+  if (readingCopyRequested(request)) {
+    return (
+      (await fromArchive(request, judgmentId, true, readingCopyKey(judgmentId))) ??
+      new Response("No reading copy is available for this judgment", {
+        status: 404,
+      })
+    )
+  }
   const archived = await fromArchive(request, judgmentId, true)
   return archived ?? fromOriginal(request, result.judgment, "GET")
 }
@@ -185,6 +209,16 @@ export async function HEAD(request: Request, { params }: RouteParameters) {
   const { judgmentId } = await params
   const result = await judgmentPdf(request, judgmentId)
   if ("error" in result) return result.error
+  if (readingCopyRequested(request)) {
+    return (
+      (await fromArchive(
+        request,
+        judgmentId,
+        false,
+        readingCopyKey(judgmentId)
+      )) ?? new Response(null, { status: 404 })
+    )
+  }
   const archived = await fromArchive(request, judgmentId, false)
   return archived ?? fromOriginal(request, result.judgment, "HEAD")
 }

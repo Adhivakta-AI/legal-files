@@ -7,7 +7,7 @@ import { AuthShell } from "@/components/auth/auth-shell"
 import styles from "@/components/auth/auth.module.css"
 import { getAuth } from "@/lib/auth"
 
-export const metadata: Metadata = { title: "Account — Lex Archives" }
+export const metadata: Metadata = { title: "Account — Vidhi Kosh" }
 export const dynamic = "force-dynamic"
 
 export default async function AccountPage() {

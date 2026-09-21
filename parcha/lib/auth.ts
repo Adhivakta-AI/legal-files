@@ -25,7 +25,7 @@ export function getAuth() {
   const googleClientSecret = serverSetting("GOOGLE_CLIENT_SECRET")
 
   return betterAuth({
-    appName: "Lex Archives",
+    appName: "Vidhi Kosh",
     baseURL,
     secret: requiredServerSetting("BETTER_AUTH_SECRET"),
     database: cloudflareEnv().AUTH_DB,
@@ -69,7 +69,13 @@ export function getAuth() {
       encryptOAuthTokens: true,
       accountLinking: {
         enabled: true,
-        trustedProviders: [],
+        // Without a trusted provider, signing in with Google against an
+        // existing email/password account fails with `account_not_linked`.
+        // Google is safe to trust here because the link is gated three ways:
+        // the provider sets requireEmailVerification, the local account must
+        // already be verified (requireLocalEmailVerified), and the addresses
+        // must match exactly (allowDifferentEmails: false).
+        trustedProviders: ["google"],
         allowDifferentEmails: false,
         requireLocalEmailVerified: true,
       },

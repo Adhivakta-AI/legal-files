@@ -49,10 +49,10 @@ export function AppNavbar({
 
   return (
     <header className={styles.header}>
-      <Link href="/" className={styles.brand} aria-label="Lex Archives home">
+      <Link href="/" className={styles.brand} aria-label="Vidhi Kosh home">
         <BrandMark className={styles.brandMark} />
         <span className={styles.brandCopy}>
-          <strong>LEX ARCHIVES</strong>
+          <strong>VIDHI KOSH</strong>
           <span>INDIAN CASE-LAW INTELLIGENCE</span>
         </span>
       </Link>

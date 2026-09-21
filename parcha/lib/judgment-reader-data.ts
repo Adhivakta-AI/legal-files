@@ -5,6 +5,7 @@ import {
   type JudgmentReadingCopy,
   type ReadingCopyChunkRow,
 } from "@/lib/reading-copy"
+import { hasReadingCopy } from "@/lib/reading-copy-artifacts"
 import { cloudflareEnv, serverSetting } from "@/lib/server-env"
 
 export interface JudgmentTopic {
@@ -26,6 +27,8 @@ export interface JudgmentReaderData {
   topics: JudgmentTopic[]
   citedPassage: CitedPassage | null
   readingCopy: JudgmentReadingCopy | null
+  /** A generated reading-copy PDF exists in R2 for this judgment. */
+  readingCopyPdf: boolean
 }
 
 const JUDGMENT_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/
@@ -46,7 +49,12 @@ export async function getJudgmentReaderData(
   chunkId?: string | null
 ): Promise<JudgmentReaderData> {
   if (!JUDGMENT_ID.test(judgmentId)) {
-    return { topics: [], citedPassage: null, readingCopy: null }
+    return {
+      topics: [],
+      citedPassage: null,
+      readingCopy: null,
+      readingCopyPdf: false,
+    }
   }
 
   const db = cloudflareEnv().LEGAL_DB
@@ -89,11 +97,13 @@ export async function getJudgmentReaderData(
         .then((result: { results: ReadingCopyChunkRow[] }) => result.results)
     : Promise.resolve([])
 
-  const [topicsResult, citedPassage, readingCopyRows] = await Promise.all([
-    topicsQuery,
-    passageQuery,
-    readingCopyQuery,
-  ])
+  const [topicsResult, citedPassage, readingCopyRows, readingCopyPdf] =
+    await Promise.all([
+      topicsQuery,
+      passageQuery,
+      readingCopyQuery,
+      hasReadingCopy(judgmentId),
+    ])
   const readingCopy = readingCopyRows.length
     ? buildJudgmentReadingCopy(judgmentId, readingCopyRows)
     : null
@@ -102,5 +112,6 @@ export async function getJudgmentReaderData(
     topics: topicsResult.results,
     citedPassage,
     readingCopy: readingCopy?.blockCount ? readingCopy : null,
+    readingCopyPdf,
   }
 }

@@ -30,7 +30,7 @@ export function PipelinePanel() {
         <div>
           <span className={styles.eyebrow}>QUERY PIPELINE</span>
           <strong>
-            {displayMode === "search" ? "lex://search" : "lex://ai-pro"}
+            {displayMode === "search" ? "vidhi://search" : "vidhi://ai-pro"}
           </strong>
         </div>
         <span>

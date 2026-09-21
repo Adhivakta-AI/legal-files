@@ -41,9 +41,9 @@ export function Header() {
   return (
     <header className="site-header" data-variant="hero" role="banner">
       <nav ref={navRef} className="site-nav" aria-label="Main navigation">
-        <a href="#top" className="site-logo" aria-label="Lex — Home">
+        <a href="#top" className="site-logo" aria-label="Vidhi Kosh — Home">
           <BrandMark className="site-logo-mark" />
-          <span>LEX</span>
+          <span>VIDHI KOSH</span>
         </a>
         <button
           className="nav-toggle"
@@ -74,7 +74,7 @@ export function Header() {
               className="btn-chamfer site-nav-cta btn-dark"
               onClick={closeOpen}
             >
-              Open Lex
+              Open Vidhi Kosh
             </Link>
           </li>
         </ul>

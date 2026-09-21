@@ -48,9 +48,13 @@ export function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div className="footer-brand">
-            <Link href="/" className="footer-logo" aria-label="Lex — Home">
+            <Link
+              href="/"
+              className="footer-logo"
+              aria-label="Vidhi Kosh — Home"
+            >
               <BrandMark className="footer-logo-mark" />
-              <span>LEX</span>
+              <span>VIDHI KOSH</span>
             </Link>
             <p>
               The precedent engine for Indian law. Built for advocates who cite
@@ -93,7 +97,9 @@ export function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <span className="mono-label">© 2026 Lex. All rights reserved.</span>
+          <span className="mono-label">
+            © 2026 Vidhi Kosh. All rights reserved.
+          </span>
           <div className="status footer-status">
             <span className="footer-status-dot" />
             <span>All systems operational</span>

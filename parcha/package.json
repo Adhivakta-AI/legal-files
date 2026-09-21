@@ -21,6 +21,10 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "eval:score": "node evaluation/score.mjs",
     "eval:test": "node --test evaluation/metrics.test.mjs",
+    "reading-copy:build": "node scripts/build-reading-copy.mjs",
+    "reading-copy:enrich": "node scripts/enrich-reading-copy-layout.mjs",
+    "reading-copy:pdf": "node scripts/generate-reading-copy-pdf.mjs",
+    "reading-copy:test": "node --test scripts/lib/poppler-layout.test.mjs scripts/lib/case-law-reference.test.mjs scripts/lib/reading-copy-validation.test.mjs",
     "test:grounding": "node --test lib/research/grounding-validation.test.mjs lib/research/query-validation.test.mjs",
     "typecheck": "tsc --noEmit"
   },

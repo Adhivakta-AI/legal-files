@@ -61,7 +61,7 @@ export function CapabilitiesSection() {
       <SectionDivider />
       <section
         className="stats-strip"
-        aria-label="Lex platform highlights"
+        aria-label="Vidhi Kosh platform highlights"
         data-stagger
       >
         {stats.map(([label, value, note]) => (

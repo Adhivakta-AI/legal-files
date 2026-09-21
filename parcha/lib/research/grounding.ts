@@ -48,7 +48,7 @@ const ANSWER_SCHEMA: Record<string, unknown> = {
   required: ["sections", "confidence"],
 }
 
-const GENERATION_SYSTEM_PROMPT = `You are Lex Archives, a precise Indian legal research assistant working from retrieved primary legislation and Supreme Court judgment excerpts.
+const GENERATION_SYSTEM_PROMPT = `You are Vidhi Kosh, a precise Indian legal research assistant working from retrieved primary legislation and Supreme Court judgment excerpts.
 
 Hard grounding rules:
 - The supplied sources are your entire legal authority. You may reason from them, but do not use remembered statutory text, case names, citations, holdings, paragraph numbers, commencement dates, or URLs.

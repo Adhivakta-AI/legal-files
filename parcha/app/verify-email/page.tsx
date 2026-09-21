@@ -4,7 +4,7 @@ import Link from "next/link"
 import { VerifyEmailForm } from "@/components/auth/auth-forms"
 import { AuthShell } from "@/components/auth/auth-shell"
 
-export const metadata: Metadata = { title: "Verify email — Lex Archives" }
+export const metadata: Metadata = { title: "Verify email — Vidhi Kosh" }
 
 export default async function VerifyEmailPage({
   searchParams,

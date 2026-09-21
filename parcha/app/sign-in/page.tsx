@@ -5,7 +5,7 @@ import { SignInForm } from "@/components/auth/auth-forms"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { isGoogleAuthConfigured } from "@/lib/auth"
 
-export const metadata: Metadata = { title: "Sign in — Lex Archives" }
+export const metadata: Metadata = { title: "Sign in — Vidhi Kosh" }
 
 function safeCallback(value?: string) {
   return value?.startsWith("/") && !value.startsWith("//") ? value : "/research"
@@ -24,7 +24,7 @@ export default async function SignInPage({
       description="Sign in to use the citation-grounded research workspace."
       footer={
         <>
-          New to Lex Archives? <Link href="/sign-up">Create an account</Link>
+          New to Vidhi Kosh? <Link href="/sign-up">Create an account</Link>
         </>
       }
     >

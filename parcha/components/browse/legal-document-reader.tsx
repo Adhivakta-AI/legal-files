@@ -107,7 +107,7 @@ export function LegalDocumentReader({
             <div className={styles.caseName}>{document.title}</div>
             <div className={styles.parties}>
               <span>AUTHORITATIVE COPY</span>
-              Original government PDF preserved by Lex Archives
+              Original government PDF preserved by Vidhi Kosh
             </div>
           </div>
 

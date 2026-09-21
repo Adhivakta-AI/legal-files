@@ -139,7 +139,7 @@ export function AnswerPanel() {
         <p className={styles.disclaimer}>
           {displayMode === "search"
             ? "Results are ranked from indexed passages. Review the linked judgment PDFs before relying on any proposition."
-            : "Lex Archives provides research assistance, not legal advice. Verify propositions against the linked legislation and judgment PDFs."}
+            : "Vidhi Kosh provides research assistance, not legal advice. Verify propositions against the linked legislation and judgment PDFs."}
         </p>
       ) : null}
     </section>

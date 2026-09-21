@@ -12,7 +12,7 @@ import { filtersToBrowseRequest, searchParamsToState } from "@/lib/browse/url"
 import { getAuth } from "@/lib/auth"
 
 export const metadata: Metadata = {
-  title: "Browse Judgments — Lex Archives",
+  title: "Browse Judgments — Vidhi Kosh",
   description:
     "Filter the Indian Supreme Court judgment archive by year, bench, disposal, judge, citation, and more.",
 }

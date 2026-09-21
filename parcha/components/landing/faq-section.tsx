@@ -2,12 +2,12 @@ import { Badge, ChevronDown } from "./primitives"
 
 const questions = [
   [
-    "What is Lex?",
-    "Lex is a legal precedent engine for Indian law. It indexes rulings from the Supreme Court, the High Courts, and specialised tribunals, and lets you search them the way you would ask a colleague — in plain English, without operators or wildcards. Every result comes back with its citation chain resolved, so you can see how an authority has been treated before you rely on it.",
+    "What is Vidhi Kosh?",
+    "Vidhi Kosh is a legal precedent engine for Indian law. It indexes rulings from the Supreme Court, the High Courts, and specialised tribunals, and lets you search them the way you would ask a colleague — in plain English, without operators or wildcards. Every result comes back with its citation chain resolved, so you can see how an authority has been treated before you rely on it.",
   ],
   [
     "How is this different from the databases I already use?",
-    "Legacy platforms are keyword indexes with a search form bolted on: you translate your question into their query language and hope the words match. Lex resolves the proposition behind the question and retrieves the authority on that point, then puts the judgment on screen without the frames, spinners, and clicks in between.",
+    "Legacy platforms are keyword indexes with a search form bolted on: you translate your question into their query language and hope the words match. Vidhi Kosh resolves the proposition behind the question and retrieves the authority on that point, then puts the judgment on screen without the frames, spinners, and clicks in between.",
   ],
   [
     "What does the corpus cover?",
@@ -19,18 +19,18 @@ const questions = [
   ],
   [
     "Does it write my arguments for me?",
-    "No. Lex finds and verifies authority; it does not draft your case or replace your reading of a judgment. It gives you the ruling, the passage, and the citation, and gets out of the way.",
+    "No. Vidhi Kosh finds and verifies authority; it does not draft your case or replace your reading of a judgment. It gives you the ruling, the passage, and the citation, and gets out of the way.",
   ],
   [
     "Is my research confidential?",
     "Yes. Your queries describe your matter, so we treat them as privileged work product. They are not sold, not shared, and not used to train models for anyone else.",
   ],
   [
-    "How will Lex be priced?",
+    "How will Vidhi Kosh be priced?",
     "We are planning a flat subscription for individual advocates, with chamber and firm tiers, rather than per-search or per-document metering. Final pricing goes out to the waitlist before launch.",
   ],
   [
-    "When will Lex be available?",
+    "When will Vidhi Kosh be available?",
     "We are rolling out early access now. Join the waitlist and we will send an invite as capacity opens up, along with the chance to shape what ships before wider release.",
   ],
 ]

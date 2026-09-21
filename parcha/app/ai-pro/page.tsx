@@ -3,9 +3,9 @@ import type { Metadata } from "next"
 import { AuthenticatedResearchPage } from "@/components/research/authenticated-research-page"
 
 export const metadata: Metadata = {
-  title: "AI Pro — Lex Archives",
+  title: "AI Pro — Vidhi Kosh",
   description:
-    "Citation-grounded legal synthesis across the Lex Archives judgment index.",
+    "Citation-grounded legal synthesis across the Vidhi Kosh judgment index.",
 }
 export const dynamic = "force-dynamic"
 

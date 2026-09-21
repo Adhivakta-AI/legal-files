@@ -5,7 +5,7 @@ import { ResetPasswordForm } from "@/components/auth/auth-forms"
 import { AuthShell } from "@/components/auth/auth-shell"
 
 export const metadata: Metadata = {
-  title: "Choose a new password — Lex Archives",
+  title: "Choose a new password — Vidhi Kosh",
 }
 
 export default async function ResetPasswordPage({

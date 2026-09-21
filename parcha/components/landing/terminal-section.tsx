@@ -174,21 +174,27 @@ export function TerminalSection() {
                     <span />
                     <span />
                   </div>
-                  <span className="terminal-title">lex://research · live</span>
+                  <span className="terminal-title">
+                    vidhi://research · live
+                  </span>
                   <span className="blink-dot blink-dot-sm" />
                 </div>
                 <div className="terminal-body">
                   <div data-terminal-line>
                     <span className="prompt">λ</span>{" "}
-                    <span className="cmd">lex init</span>
+                    <span className="cmd">vidhi init</span>
                   </div>
                   <div className="term-line-gap-sm" data-terminal-line>
-                    <pre className="term-ascii">{`  ██╗      ███████╗ ██╗  ██╗
-  ██║      ██╔════╝ ╚██╗██╔╝
-  ██║      █████╗    ╚███╔╝
-  ██║      ██╔══╝    ██╔██╗
-  ███████╗ ███████╗ ██╔╝ ██╗
-  ╚══════╝ ╚══════╝ ╚═╝  ╚═╝`}</pre>
+                    {/* Rules are standalone rows, never a closed box: Chivo
+                        Mono has no box-drawing glyphs, so they fall back to the
+                        generic monospace face. A closed box would need the
+                        border rows to match the width of the Chivo Mono text
+                        rows, which breaks wherever the fallback advance is not
+                        0.6em (Consolas is 0.55em). */}
+                    <pre className="term-ascii">{`════════════════════
+  VIDHI KOSH
+  INDIAN CASE LAW
+════════════════════`}</pre>
                   </div>
                   <div className="term-line-gap-sm output" data-terminal-line>
                     &gt; Connecting to corpus...
@@ -197,7 +203,8 @@ export function TerminalSection() {
                     &gt; Supreme Court · High Courts · Tribunals
                   </div>
                   <div className="output" data-terminal-line>
-                    &gt; Loading LEX engine <span className="success">OK</span>
+                    &gt; Loading VIDHI KOSH engine{" "}
+                    <span className="success">OK</span>
                   </div>
                   <div className="output" data-terminal-line>
                     &gt; Citation graph resolved · ratios mapped

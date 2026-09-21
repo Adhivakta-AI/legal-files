@@ -1,4 +1,4 @@
-# Lex Archives application
+# Vidhi Kosh application
 
 This Next.js application is the browser-facing backend-for-frontend. It owns
 authentication and research orchestration; the separate `cloudflare/` Worker

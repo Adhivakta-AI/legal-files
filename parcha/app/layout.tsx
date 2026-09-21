@@ -8,11 +8,11 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ??
       "https://lex-archives-app.politestranger18.workers.dev"
   ),
-  title: "Lex Archives — Indian Case-Law Research",
+  title: "Vidhi Kosh — Indian Case-Law Research",
   description:
     "Citation-grounded research across Indian Supreme Court judgments.",
   openGraph: {
-    title: "Lex Archives — Indian Case-Law Research",
+    title: "Vidhi Kosh — Indian Case-Law Research",
     description:
       "Citation-grounded research across Indian Supreme Court judgments.",
     type: "website",

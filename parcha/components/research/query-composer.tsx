@@ -32,7 +32,7 @@ export function QueryComposer({ mode }: { mode: ResearchMode }) {
   return (
     <section className={styles.composerSection}>
       <div className={styles.intro}>
-        <span className={styles.eyebrow}>LEX / RESEARCH TERMINAL</span>
+        <span className={styles.eyebrow}>VIDHI KOSH / RESEARCH TERMINAL</span>
         <h1>What would you like to research?</h1>
         <p>Ask about an issue, doctrine, statute, or judgment.</p>
       </div>

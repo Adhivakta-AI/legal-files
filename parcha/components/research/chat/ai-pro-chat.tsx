@@ -90,7 +90,7 @@ export function AiProChat({ userName }: { userName: string }) {
             <div className={styles.welcomeMark}>
               <Bot size={27} />
             </div>
-            <span>LEX ARCHIVES / AI PRO</span>
+            <span>VIDHI KOSH / AI PRO</span>
             <h1>
               How can I help with your legal research
               {userName ? `, ${userName.split(" ")[0]}` : ""}?
